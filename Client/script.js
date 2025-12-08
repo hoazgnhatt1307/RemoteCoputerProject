@@ -99,29 +99,20 @@ function handleJsonData(jsonString) {
         break;
 
       // Xử lý Ảnh chụp màn hình
+      case "SCREENSHOT_FILE":
+        downloadImageFromBase64(msg.payload);
+        showToast("Ảnh đã được lưu về máy!", "success");
+        break;
+
       case "SCREEN_CAPTURE":
-        c; // 1. Lấy dữ liệu ảnh
         const imgSrc = "data:image/jpeg;base64," + msg.payload;
-
-        // 2. Hiển thị vào khung Preview bên phải (Thay vì khung Stream)
         const previewImg = document.getElementById("captured-preview");
-        const previewText = document.getElementById("preview-text");
-        const saveBadge = document.getElementById("save-badge");
-
         if (previewImg) {
           previewImg.src = imgSrc;
           previewImg.classList.remove("hidden");
-          previewText.style.display = "none"; // Ẩn chữ "Chưa có ảnh"
-          saveBadge.classList.remove("hidden"); // Hiện chữ "Saved"
-
-          // Hiệu ứng nháy nhẹ để biết ảnh mới
-          previewImg.style.opacity = "0.5";
-          setTimeout(() => (previewImg.style.opacity = "1"), 300);
+          document.getElementById("preview-text").style.display = "none";
+          document.getElementById("save-badge").classList.remove("hidden");
         }
-
-        // (Tùy chọn) Vẫn hiện thông báo Toast
-        if (typeof showToast === "function")
-          showToast("Ảnh đã được lưu và gửi về!", "success");
         break;
 
       // Xử lý Log & Thông báo
@@ -724,4 +715,20 @@ function downloadVideoFromBase64(base64) {
         document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
     }, 100);
+}
+
+function downloadImageFromBase64(base64) {
+    const link = document.createElement('a');
+    
+    // Tạo link ảo chứa dữ liệu ảnh
+    link.href = 'data:image/jpeg;base64,' + base64;
+    
+    // Đặt tên file theo thời gian thực
+    const time = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    link.download = `Screenshot_${time}.jpg`;
+    
+    // Kích hoạt tải về
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }

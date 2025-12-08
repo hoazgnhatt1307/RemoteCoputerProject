@@ -202,46 +202,37 @@ public static void BroadcastLog(string message)
                             break;
                         case "CAPTURE_SCREEN":
                             try
-                                {
-                                    // 1. Chụp ảnh GỐC (Full HD, Nét căng) để LƯU vào máy
-                                    // imgBytes này rất nặng, chỉ dùng để lưu file, KHÔNG dùng để gửi
-                                    var imgBytes = SystemHelper.GetScreenShot(90L, 1.0);
+                            {
+                                // 1. Chụp ảnh GỐC (Chất lượng 90%, Tỉ lệ 1.0 = Full Size)
+                                // Lưu ý: Dữ liệu này chỉ nằm trên RAM (biến imgBytes), không lưu vào ổ cứng Server
+                                var imgBytes = SystemHelper.GetScreenShot(90L, 1.0);
 
-                                    if (imgBytes != null)
+                                if (imgBytes != null)
+                                {
+                                    Console.WriteLine($">> Đã chụp màn hình ({imgBytes.Length / 1024} KB). Đang gửi...");
+
+                                    // 2. Chuyển đổi sang Base64 để gửi qua mạng
+                                    string base64Full = Convert.ToBase64String(imgBytes);
+
+                                    // 3. Gửi gói tin chứa ẢNH GỐC để Client tải về
+                                    SendJson(socket, "SCREENSHOT_FILE", base64Full);
+
+                                    // 4. (Tùy chọn) Tạo thêm ảnh nhỏ (Thumbnail) để hiển thị xem trước trên Web cho nhanh
+                                    var previewBytes = SystemHelper.GetScreenShot(50L, 0.3); 
+                                    if (previewBytes != null)
                                     {
-                                        // --- LƯU FILE VÀO MÁY TÍNH ---
-                                        string baseFolder = AppDomain.CurrentDomain.BaseDirectory;
-                                        string folderPath = Path.Combine(baseFolder, "Screenshots");
-                                        if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
-
-                                        string fileName = $"IMG_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
-                                        string fullPath = Path.Combine(folderPath, fileName);
-                                        File.WriteAllBytes(fullPath, imgBytes);
-
-                                        // Gửi thông báo đã lưu thành công
-                                        SendJson(socket, "LOG", $"Đã lưu ảnh: {fileName}");
-
-
-                                        // --- [KHẮC PHỤC LỖI VĂNG Ở ĐÂY] ---
-                                        
-                                        // Thay vì gửi imgBytes (nặng), ta chụp lại một ảnh nhỏ (Thumbnail)
-                                        // Tỉ lệ 0.3 (30%) -> Ảnh chỉ nặng khoảng 20KB -> Gửi siêu nhanh
-                                        var previewBytes = SystemHelper.GetScreenShot(50L, 0.3); 
-
-                                        if (previewBytes != null)
-                                        {
-                                            // Gửi cái ảnh NHỎ này về Web để xem trước
-                                            SendJson(socket, "SCREEN_CAPTURE", Convert.ToBase64String(previewBytes));
-                                        }
+                                        SendJson(socket, "SCREEN_CAPTURE", Convert.ToBase64String(previewBytes));
                                     }
+                                    
+                                    SendJson(socket, "LOG", "Đã gửi ảnh chụp về máy bạn!");
                                 }
-                                catch (Exception ex)
-                                {
-                                    Console.WriteLine("Lỗi Capture: " + ex.Message);
-                                    SendJson(socket, "LOG", "Lỗi: " + ex.Message);
-                                }
-                                break;
-                                                    case "GET_APPS":
+                            }
+                            catch (Exception ex)
+                            {
+                                SendJson(socket, "LOG", "Lỗi chụp ảnh: " + ex.Message);
+                            }
+                            break;
+                        case "GET_APPS":
                             SendJson(socket, "APP_LIST", GetCurrentApps());
                             break;
                         case "GET_PROCESS":
