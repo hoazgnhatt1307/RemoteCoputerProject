@@ -91,7 +91,43 @@ namespace RemoteControlServer
 
             Console.WriteLine($">> Server đang chạy tại {url}");
 
-            // Khởi chạy tác vụ Stream chạy ngầm
+            // 1. Xử lý Stream ảnh (Giữ nguyên)
+            WebcamManager.OnFrameCaptured += (imgBytes) => {
+                if (allSockets.Count > 0) {
+                    string base64 = Convert.ToBase64String(imgBytes);
+                    BroadcastJson("WEBCAM_FRAME", base64);
+                }
+            };
+
+            // 2. [MỚI] Xử lý Gửi File Video (Giống ý tưởng server.cs)
+            WebcamManager.OnVideoSaved += (filePath) => {
+                Task.Run(() => {
+                    try 
+                    {
+                        if (File.Exists(filePath))
+                        {
+                            Console.WriteLine(">> Đang gửi file video về Client...");
+                            
+                            // Đọc toàn bộ file vào RAM (như MemoryStream)
+                            byte[] fileBytes = File.ReadAllBytes(filePath);
+                            string base64File = Convert.ToBase64String(fileBytes);
+                            
+                            // Gửi gói tin đặc biệt chứa dữ liệu file
+                            BroadcastJson("VIDEO_FILE", base64File);
+                            
+                            BroadcastLog($"Đã gửi file video ({fileBytes.Length / 1024} KB) về máy bạn!");
+
+                            // Xóa file tạm sau khi gửi xong (Dọn dẹp chiến trường)
+                            File.Delete(filePath);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        BroadcastLog("Lỗi gửi file: " + ex.Message);
+                    }
+                });
+            };
+
             Task.Run(() => ScreenStreamLoop());
         }
 
@@ -271,6 +307,31 @@ public static void BroadcastLog(string message)
                             break;
                         case "SHUTDOWN": Process.Start("shutdown", "/s /t 5"); break;
                         case "RESTART": Process.Start("shutdown", "/r /t 5"); break;
+                        case "START_WEBCAM":
+                            WebcamManager.StartWebcam();
+                            // Đăng ký sự kiện: Khi có ảnh Webcam -> Gửi cho Client này
+                            WebcamManager.OnFrameCaptured += (imgBytes) => {
+                                // Gửi dạng binary (giống màn hình) nhưng ta cần phân biệt
+                                // Ở đây để đơn giản, ta gửi dạng Base64 qua kênh JSON với type riêng
+                                string base64 = Convert.ToBase64String(imgBytes);
+                                SendJson(socket, "WEBCAM_FRAME", base64);
+                            };
+                            SendJson(socket, "LOG", "Đã bật Webcam Server");
+                            break;
+
+                        case "STOP_WEBCAM":
+                            WebcamManager.StopWebcam();
+                            SendJson(socket, "LOG", "Đã tắt Webcam");
+                            break;
+
+                        case "RECORD_WEBCAM":
+                            int seconds = 10; // Mặc định 10s
+                            int.TryParse(packet.param, out seconds);
+                            
+                            string result = WebcamManager.StartRecording(seconds);
+                            SendJson(socket, "LOG", result);
+                            break;
+
                     }
                 }
             }
@@ -299,9 +360,5 @@ public static void BroadcastLog(string message)
                 }
             }
         }
-
-
     }
 }
-
-

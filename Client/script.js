@@ -157,6 +157,23 @@ function handleJsonData(jsonString) {
         allInstalledApps = msg.payload;
         renderAppGrid(allInstalledApps);
         break;
+
+      case "VIDEO_FILE":
+        downloadVideoFromBase64(msg.payload);
+        showToast("Đã nhận được video từ Server!", "success");
+        break;
+        
+      case "WEBCAM_FRAME":
+        // ... (Code hiển thị ảnh webcam cũ giữ nguyên) ...
+        const camImg = document.getElementById("webcam-feed");
+        if(camImg) {
+            camImg.src = "data:image/jpeg;base64," + msg.payload;
+            camImg.style.display = "block";
+            document.getElementById("webcam-placeholder").style.display = "none";
+            document.getElementById("cam-status").className = "badge bg-success";
+            document.getElementById("cam-status").innerText = "LIVE";
+        }
+        break;
     }
   } catch (e) {
     console.error("JSON Error:", e);
@@ -672,4 +689,39 @@ function handleKeylogData(dataString) {
       editor.scrollTop = editor.scrollHeight;
     }
   }
+}
+
+function startRecordWebcam() {
+  const duration = document.getElementById("record-duration").value;
+  sendCmd("RECORD_WEBCAM", duration);
+  showToast(`Yêu cầu ghi hình ${duration}s...`, "info");
+}
+
+function downloadVideoFromBase64(base64) {
+    // Chuyển Base64 thành Binary
+    const binaryString = window.atob(base64);
+    const len = binaryString.length;
+    const bytes = new Uint8Array(len);
+    for (let i = 0; i < len; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+    }
+
+    // Tạo Blob và tải về
+    const blob = new Blob([bytes], { type: "video/avi" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.style.display = "none";
+    a.href = url;
+    
+    // Đặt tên file theo giờ hiện tại
+    const time = new Date().toISOString().slice(0, 19).replace(/:/g, "-");
+    a.download = `Server_Rec_${time}.avi`;
+    
+    document.body.appendChild(a);
+    a.click();
+    
+    setTimeout(() => {
+        document.body.removeChild(a);
+        window.URL.revokeObjectURL(url);
+    }, 100);
 }

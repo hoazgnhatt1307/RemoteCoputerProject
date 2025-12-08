@@ -17,3 +17,8 @@ C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\bin\Debug\net8.0-windo
 C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\obj\Debug\net8.0-windows\ServerDoAn.csproj.Up2Date
 C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\obj\Debug\net8.0-windows\ServerDoAn.genruntimeconfig.cache
 C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\obj\Debug\net8.0-windows\ref\ServerDoAn.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\bin\Debug\net8.0-windows\OpenCvSharp.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\bin\Debug\net8.0-windows\runtimes\win-x64\native\OpenCvSharpExtern.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\bin\Debug\net8.0-windows\runtimes\win-x64\native\opencv_videoio_ffmpeg4110_64.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\bin\Debug\net8.0-windows\runtimes\win-x86\native\OpenCvSharpExtern.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\Đồ án\ServerDoAn\bin\Debug\net8.0-windows\runtimes\win-x86\native\opencv_videoio_ffmpeg4110.dll
