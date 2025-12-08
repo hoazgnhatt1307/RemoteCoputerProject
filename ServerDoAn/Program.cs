@@ -2,14 +2,30 @@
 using System.Text;
 using System.Threading;
 using System.Windows.Forms; // Cần file .csproj có UseWindowsForms mới dùng được cái này
+using System.Runtime.InteropServices;
 
 namespace RemoteControlServer
 {
     class Program
     {
+        [DllImport("shcore.dll")]
+        private static extern int SetProcessDpiAwareness(int processDpiAwareness);
+        private const int PROCESS_PER_MONITOR_DPI_AWARE = 2;
+
         [STAThread] // Bắt buộc để xử lý các tác vụ hệ thống
         static void Main(string[] args)
         {
+            try {
+                Application.SetHighDpiMode(HighDpiMode.PerMonitorV2);
+            } catch { }
+
+            try {
+                SetProcessDpiAwareness(PROCESS_PER_MONITOR_DPI_AWARE);
+            } catch { }
+
+            Application.EnableVisualStyles();
+            Application.SetCompatibleTextRenderingDefault(false);
+            
             Console.OutputEncoding = Encoding.UTF8;
             Console.Title = "RCS Agent Core - Port 8181";
 

@@ -1,293 +1,73 @@
 let socket = null;
 let objectUrl = null;
-let currentViewMode = "apps";
+let currentViewMode = "apps"; // Mặc định xem Apps
+let allInstalledApps = [];    // Danh sách ứng dụng cài đặt
 
 // --- 1. KẾT NỐI SERVER ---
 function initiateConnection() {
-  const ip = document.getElementById("server-ip").value.trim();
-  const port = document.getElementById("server-port").value.trim();
-  const pass = document.getElementById("auth-pass").value.trim();
-  const errorLabel = document.getElementById("login-error");
+    const ip = document.getElementById("server-ip").value.trim();
+    const port = document.getElementById("server-port").value.trim();
+    const pass = document.getElementById("auth-pass").value.trim();
+    const errorLabel = document.getElementById("login-error");
 
-  if (!ip || !port) {
-    errorLabel.textContent = "Please enter IP and Port!";
-    return;
-  }
+    if (!ip || !port) {
+        errorLabel.textContent = "Please enter IP and Port!";
+        return;
+    }
 
-  errorLabel.textContent = "Connecting...";
+    errorLabel.textContent = "Connecting...";
 
-  try {
-    socket = new WebSocket(`ws://${ip}:${port}`);
-    // [QUAN TRỌNG] Chế độ nhận dữ liệu Binary để xử lý Stream Video
-    socket.binaryType = "arraybuffer";
+    try {
+        socket = new WebSocket(`ws://${ip}:${port}`);
+        socket.binaryType = "arraybuffer"; // Nhận dữ liệu Stream
 
-    socket.onopen = () => {
-      // Gửi gói tin AUTH theo chuẩn WebPacket của Server C#
-      const authPacket = JSON.stringify({ type: "AUTH", payload: pass });
-      socket.send(authPacket);
-    };
+        socket.onopen = () => {
+            // Gửi gói tin AUTH
+            const authPacket = JSON.stringify({ type: "AUTH", payload: pass });
+            socket.send(authPacket);
+        };
 
-    socket.onmessage = (event) => {
-      if (event.data instanceof ArrayBuffer) {
-        // Nếu nhận được dữ liệu nhị phân -> Xử lý Video Stream
-        handleBinaryStream(event.data);
-      } else {
-        // Nếu nhận được văn bản -> Xử lý JSON
-        handleJsonData(event.data);
-      }
-    };
+        socket.onmessage = (event) => {
+            if (event.data instanceof ArrayBuffer) {
+                handleBinaryStream(event.data);
+            } else {
+                handleJsonData(event.data);
+            }
+        };
 
-    socket.onclose = () => handleDisconnect();
-    socket.onerror = () => {
-      errorLabel.textContent = "Connection Error! Check Server.";
-    };
-  } catch (e) {
-    errorLabel.textContent = "Invalid IP Address!";
-  }
+        socket.onclose = () => handleDisconnect();
+        socket.onerror = () => { errorLabel.textContent = "Connection Error!"; };
+    } catch (e) {
+        errorLabel.textContent = "Invalid IP Address!";
+    }
 }
 
 function handleDisconnect() {
-  document.getElementById("main-interface").classList.add("disabled-ui");
-  const loginOverlay = document.getElementById("login-overlay");
-  loginOverlay.style.display = "flex";
-  loginOverlay.style.opacity = "1";
-
-  document.getElementById("login-error").textContent =
-    "Disconnected from Server.";
-
-  const badge = document.getElementById("connectionBadge");
-  badge.className = "status-badge status-offline";
-  badge.innerHTML = '<i class="fas fa-circle"></i> Disconnected';
-
-  if (objectUrl) URL.revokeObjectURL(objectUrl);
-  if (socket) socket.close();
-}
-
-// --- 2. XỬ LÝ DỮ LIỆU NHẬN VỀ ---
-function handleBinaryStream(arrayBuffer) {
-  if (objectUrl) URL.revokeObjectURL(objectUrl);
-
-  // Tạo Blob từ dữ liệu nhị phân nhận được
-  const blob = new Blob([arrayBuffer], { type: "image/jpeg" });
-  objectUrl = URL.createObjectURL(blob);
-
-  const img = document.getElementById("live-screen");
-  img.src = objectUrl;
-  img.style.display = "block";
-  document.getElementById("screen-placeholder").style.display = "none";
-  document.getElementById("monitorStatus").innerText = "Live Streaming";
-}
-
-function handleJsonData(jsonString) {
-  try {
-    const msg = JSON.parse(jsonString);
-
-    switch (msg.type) {
-      case "AUTH_RESULT":
-        if (msg.payload === "OK") {
-          // Hiệu ứng tắt Login Overlay
-          const overlay = document.getElementById("login-overlay");
-          overlay.style.opacity = "0";
-          setTimeout(() => {
-            overlay.style.display = "none";
-            document
-              .getElementById("main-interface")
-              .classList.remove("disabled-ui");
-          }, 500);
-
-          const badge = document.getElementById("connectionBadge");
-          badge.className = "status-badge status-online";
-          badge.innerHTML = '<i class="fas fa-circle"></i> Online';
-          logToTerminal("System Connected.", "system");
-
-          // Tự động lấy danh sách ứng dụng khi kết nối thành công
-          getApps();
-        } else {
-          document.getElementById("login-error").textContent =
-            "Wrong Password!";
-          socket.close();
-        }
-        break;
-
-      case "SCREEN_CAPTURE":
-        // Nhận ảnh Base64 (Chất lượng cao)
-        const img = document.getElementById("live-screen");
-        img.src = "data:image/jpeg;base64," + msg.payload;
-        img.style.display = "block";
-        document.getElementById("screen-placeholder").style.display = "none";
-        document.getElementById("monitorStatus").innerText = "HD Screenshot";
-        break;
-
-      case "LOG":
-        // Xử lý Log (Keylogger hoặc thông báo hệ thống)
-        const isKeylog = msg.payload.includes("[Keylogger]");
-        logToTerminal(msg.payload, isKeylog ? "keylog" : "info");
-        break;
-
-      case "PROCESS_LIST":
-        // Chỉ cập nhật bảng nếu người dùng đang ở chế độ xem Processes
-        if (currentViewMode === "processes") {
-          renderProcessTable(msg.payload);
-        }
-        break;
-      case "APP_LIST":
-        // Chỉ cập nhật bảng nếu người dùng đang ở chế độ xem Apps
-        if (currentViewMode === "apps") {
-          renderProcessTable(msg.payload);
-        }
-        break;
-    }
-  } catch (e) {
-    console.error("JSON Error:", e);
-  }
-}
-
-// --- 3. GỬI LỆNH (COMMANDS) ---
-function sendCmd(command, param = "") {
-  if (socket && socket.readyState === WebSocket.OPEN) {
-    // [QUAN TRỌNG] Cấu trúc này phải khớp với class WebPacket trong C#
-    const packet = {
-      command: command,
-      param: param.toString(),
-    };
-    socket.send(JSON.stringify(packet));
-  }
-}
-
-// Các hàm gọi lệnh cụ thể (Wrapper)
-function sendCommand(cmd) {
-  sendCmd(cmd);
-}
-function getProcesses() {
-  currentViewMode = "processes"; // Lưu trạng thái
-  sendCmd("GET_PROCESS");
-}
-function getApps() {
-  currentViewMode = "apps"; // Lưu trạng thái
-  sendCmd("GET_APPS");
-}
-function startApp() {
-  const appName = document.getElementById("quickAppInput").value;
-  if (appName) {
-    sendCmd("START_APP", appName);
-    logToTerminal(`Command: Start ${appName}`);
-  }
-}
-function disconnect() {
-  if (socket) socket.close();
-}
-
-// --- 4. HÀM HỖ TRỢ GIAO DIỆN (UI) ---
-function switchTab(tabName, element) {
-  document
-    .querySelectorAll(".list-group-item")
-    .forEach((el) => el.classList.remove("active"));
-  element.classList.add("active");
-
-  document
-    .querySelectorAll(".tab-content")
-    .forEach((el) => el.classList.remove("active"));
-  document.getElementById(`tab-${tabName}`).classList.add("active");
-
-  const titles = {
-    dashboard: "Overview",
-    monitor: "Screen Monitor",
-    processes: "Task Manager",
-    terminal: "Terminal & Logs",
-  };
-  document.getElementById("pageTitle").innerText = titles[tabName];
-}
-
-function renderProcessTable(dataList) {
-  const tbody = document.querySelector("#procTable tbody");
-  tbody.innerHTML = "";
-
-  dataList.forEach((item) => {
-    const tr = document.createElement("tr");
-    // Xử lý hiển thị Title (Apps) hoặc Name (Process)
-    const displayName = item.title || item.name;
-
-    tr.innerHTML = `
-            <td><span class="badge bg-secondary">${item.id}</span></td>
-            <td class="fw-bold">${displayName}</td>
-            <td>${item.memory || "N/A"}</td>
-            <td>
-                <button class="btn btn-danger btn-sm" onclick="if(confirm('Kill ID ${
-                  item.id
-                }?')) sendCmd('KILL', '${item.id}')">
-                    <i class="fas fa-trash"></i> Kill
-                </button>
-            </td>
-        `;
-    tbody.appendChild(tr);
-  });
-}
-
-function logToTerminal(text, type = "info") {
-  const term = document.getElementById("terminal-output");
-
-  if (type === "keylog") {
-    // Xử lý hiển thị Keylogger: In ngang hàng
-    const key = text.replace("[Keylogger] ", "");
-    const displayKey = key.length > 1 ? ` [${key}] ` : key;
-
-    if (
-      term.lastChild &&
-      term.lastChild.classList &&
-      term.lastChild.classList.contains("keylog-stream")
-    ) {
-      term.lastChild.textContent += displayKey;
-    } else {
-      const div = document.createElement("div");
-      div.className = "keylog-stream";
-      div.style.color = "#fbbf24"; // Màu vàng cho phím
-      div.textContent = `> ${displayKey}`;
-      term.appendChild(div);
-    }
-  } else {
-    // Thông báo hệ thống: Xuống dòng mới
-    const div = document.createElement("div");
-    div.style.color = type === "system" ? "#3b82f6" : "#10b981";
-    div.textContent = `[${new Date().toLocaleTimeString()}] > ${text}`;
-    term.appendChild(div);
-  }
-  term.scrollTop = term.scrollHeight;
-}
-
-function showToast(message, type = "info") {
-    const container = document.getElementById("toast-container");
+    document.getElementById("main-interface").classList.add("disabled-ui");
+    const overlay = document.getElementById("login-overlay");
+    overlay.style.display = "flex";
+    overlay.style.opacity = "1";
     
-    // Tạo phần tử div thông báo
-    const toast = document.createElement("div");
-    toast.className = `toast-msg ${type}`;
+    document.getElementById("login-error").textContent = "Disconnected from Server.";
     
-    // Chọn icon dựa trên loại thông báo
-    let icon = '<i class="fas fa-info-circle text-primary"></i>';
-    if (type === "success") icon = '<i class="fas fa-check-circle text-success"></i>';
-    if (type === "error") icon = '<i class="fas fa-exclamation-circle text-danger"></i>';
+    const badge = document.getElementById("connectionBadge");
+    badge.className = "status-badge status-offline";
+    badge.innerHTML = '<i class="fas fa-circle"></i> Disconnected';
 
-    toast.innerHTML = `${icon} <span>${message}</span>`;
-
-    // Thêm vào giao diện
-    container.appendChild(toast);
-
-    // Tự động ẩn sau 3 giây
-    setTimeout(() => {
-        toast.style.animation = "fadeOut 0.5s ease-out forwards";
-        // Xóa hẳn khỏi DOM sau khi hiệu ứng mờ kết thúc
-        setTimeout(() => { toast.remove(); }, 500);
-    }, 3000);
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    if (socket) socket.close();
 }
 
-// --- 2. CẬP NHẬT XỬ LÝ DỮ LIỆU (Sửa lại hàm handleJsonData) ---
+// --- 2. XỬ LÝ DỮ LIỆU TỪ SERVER (QUAN TRỌNG NHẤT) ---
 function handleJsonData(jsonString) {
     try {
         const msg = JSON.parse(jsonString);
 
         switch (msg.type) {
+            // [QUAN TRỌNG] Xử lý Đăng nhập
             case "AUTH_RESULT":
                 if (msg.payload === "OK") {
-                    // 1. [CODE CŨ] Ẩn màn hình Login và mở khóa giao diện
+                    // Ẩn màn hình Login
                     const overlay = document.getElementById("login-overlay");
                     overlay.style.opacity = "0";
                     setTimeout(() => {
@@ -295,25 +75,24 @@ function handleJsonData(jsonString) {
                         document.getElementById("main-interface").classList.remove("disabled-ui");
                     }, 500);
 
+                    // Cập nhật trạng thái
                     const badge = document.getElementById("connectionBadge");
                     badge.className = "status-badge status-online";
                     badge.innerHTML = '<i class="fas fa-circle"></i> Online';
+                    
                     logToTerminal("System Connected.", "system");
+                    showToast("Connected to Server!", "success");
 
-                    // 2. [CODE MỚI] Hiện thông báo và lấy dữ liệu
-                    if (typeof showToast === "function") {
-                        showToast("Connected to Server!", "success");
-                    }
+                    // Tự động lấy danh sách ứng dụng
                     getApps();
                 } else {
                     document.getElementById("login-error").textContent = "Wrong Password!";
-                    if (typeof showToast === "function") {
-                        showToast("Login Failed!", "error");
-                    }
+                    showToast("Login Failed!", "error");
                     socket.close();
                 }
                 break;
 
+            // Xử lý Ảnh chụp màn hình
             case "SCREEN_CAPTURE":
                 const img = document.getElementById("live-screen");
                 img.src = "data:image/jpeg;base64," + msg.payload;
@@ -322,39 +101,193 @@ function handleJsonData(jsonString) {
                 document.getElementById("monitorStatus").innerText = "HD Screenshot";
                 break;
 
+            // Xử lý Log & Thông báo
             case "LOG":
                 const text = msg.payload;
                 const isKeylog = text.includes("[Keylogger]");
                 logToTerminal(text, isKeylog ? "keylog" : "info");
 
-                // [CODE MỚI] Hiện thông báo Toast cho các sự kiện quan trọng
-                if (typeof showToast === "function") {
-                    if (text.includes("Đã diệt") || text.includes("Đã mở")) {
-                        showToast(text, "success");
-                    } else if (text.includes("Lỗi")) {
-                        showToast(text, "error");
-                    }
+                // Hiện thông báo nổi (Toast)
+                if (text.includes("Đã diệt") || text.includes("Đã mở") || text.includes("Đang mở")) {
+                    showToast(text, "success");
+                } else if (text.includes("Lỗi")) {
+                    showToast(text, "error");
                 }
                 break;
 
+            // Xử lý Danh sách App & Process
             case "APP_LIST":
-                // [CODE MỚI] Chỉ cập nhật nếu đang xem tab Apps
-                if (typeof currentViewMode !== 'undefined' && currentViewMode === 'apps') {
-                    renderProcessTable(msg.payload);
-                } else {
-                    // Fallback nếu chưa khai báo currentViewMode (mặc định cứ render)
-                    renderProcessTable(msg.payload);
-                }
+                if (currentViewMode === 'apps') renderProcessTable(msg.payload);
                 break;
 
             case "PROCESS_LIST":
-                // [CODE MỚI] Chỉ cập nhật nếu đang xem tab Processes
-                if (typeof currentViewMode !== 'undefined' && currentViewMode === 'processes') {
-                    renderProcessTable(msg.payload);
-                }
+                if (currentViewMode === 'processes') renderProcessTable(msg.payload);
+                break;
+            
+            // [MỚI] Xử lý Danh sách cài đặt (Library)
+            case "INSTALLED_LIST":
+                allInstalledApps = msg.payload;
+                renderAppGrid(allInstalledApps);
                 break;
         }
     } catch (e) {
         console.error("JSON Error:", e);
     }
 }
+
+function handleBinaryStream(arrayBuffer) {
+    if (objectUrl) URL.revokeObjectURL(objectUrl);
+    const blob = new Blob([arrayBuffer], { type: "image/jpeg" });
+    objectUrl = URL.createObjectURL(blob);
+    const img = document.getElementById("live-screen");
+    img.src = objectUrl;
+    img.style.display = "block";
+    document.getElementById("screen-placeholder").style.display = "none";
+    document.getElementById("monitorStatus").innerText = "Live Streaming";
+}
+
+// --- 3. GỬI LỆNH (COMMANDS) ---
+function sendCmd(command, param = "") {
+    if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify({ command: command, param: param.toString() }));
+    }
+}
+
+function sendCommand(cmd) { sendCmd(cmd); }
+function getProcesses() { 
+    currentViewMode = 'processes';
+    sendCmd("GET_PROCESS"); 
+}
+function getApps() { 
+    currentViewMode = 'apps';
+    sendCmd("GET_APPS"); 
+}
+
+function startApp() {
+    const input = document.getElementById("quickAppInput");
+    const appName = input.value.trim();
+    if (appName) {
+        sendCmd("START_APP", appName);
+        logToTerminal(`Command: Start ${appName}`);
+        input.value = ""; 
+    } else {
+        showToast("Vui lòng nhập tên ứng dụng!", "error");
+    }
+}
+
+function openWeb(url) {
+    sendCmd("START_APP", url);
+    logToTerminal(`Command: Open Browser > ${url}`);
+    showToast(`Opening ${url}...`, "info");
+}
+
+function disconnect() { if (socket) socket.close(); }
+
+// --- 4. APP LIBRARY (TÍNH NĂNG MỚI) ---
+function browseApps() {
+    document.getElementById("app-library-modal").classList.remove("hidden");
+    sendCmd("GET_INSTALLED");
+}
+
+function closeAppLibrary() {
+    document.getElementById("app-library-modal").classList.add("hidden");
+}
+
+function renderAppGrid(appList) {
+    const container = document.getElementById("app-grid");
+    container.innerHTML = "";
+    if (!appList || appList.length === 0) {
+        container.innerHTML = '<p class="text-center w-100">No apps found.</p>';
+        return;
+    }
+    appList.forEach(app => {
+        const div = document.createElement("div");
+        div.className = "app-item-btn";
+        div.onclick = () => { 
+            sendCmd("START_APP", app.path);
+            closeAppLibrary();
+            showToast(`Launching ${app.name}...`, "success");
+        };
+        div.innerHTML = `<i class="fas fa-cube app-item-icon"></i><span class="app-item-name">${app.name}</span>`;
+        container.appendChild(div);
+    });
+}
+
+function filterApps() {
+    const keyword = document.getElementById("appSearch").value.toLowerCase();
+    const filtered = allInstalledApps.filter(app => app.name.toLowerCase().includes(keyword));
+    renderAppGrid(filtered);
+}
+
+// --- 5. UI HELPERS ---
+function showToast(message, type = "info") {
+    const container = document.getElementById("toast-container");
+    if (!container) return; // Tránh lỗi nếu chưa thêm div vào HTML
+    
+    const toast = document.createElement("div");
+    toast.className = `toast-msg ${type}`;
+    let icon = type === "success" ? "check-circle" : (type === "error" ? "exclamation-circle" : "info-circle");
+    let color = type === "success" ? "text-success" : (type === "error" ? "text-danger" : "text-primary");
+    
+    toast.innerHTML = `<i class="fas fa-${icon} ${color}"></i> <span>${message}</span>`;
+    container.appendChild(toast);
+    
+    setTimeout(() => {
+        toast.style.animation = "fadeOut 0.5s ease-out forwards";
+        setTimeout(() => toast.remove(), 500);
+    }, 3000);
+}
+
+function switchTab(tabName, element) {
+    document.querySelectorAll(".list-group-item").forEach((el) => el.classList.remove("active"));
+    element.classList.add("active");
+    document.querySelectorAll(".tab-content").forEach((el) => el.classList.remove("active"));
+    document.getElementById(`tab-${tabName}`).classList.add("active");
+    
+    const titles = { dashboard: "Overview", monitor: "Screen Monitor", processes: "Task Manager", terminal: "Terminal & Logs" };
+    document.getElementById("pageTitle").innerText = titles[tabName];
+}
+
+function renderProcessTable(dataList) {
+    const tbody = document.querySelector("#procTable tbody");
+    tbody.innerHTML = "";
+    dataList.forEach((item) => {
+        const tr = document.createElement("tr");
+        const displayName = item.title || item.name; 
+        tr.innerHTML = `
+            <td><span class="badge bg-secondary">${item.id}</span></td>
+            <td class="fw-bold">${displayName}</td>
+            <td>${item.memory || "N/A"}</td>
+            <td>
+                <button class="btn btn-danger btn-sm" onclick="if(confirm('Kill ID ${item.id}?')) sendCmd('KILL', '${item.id}')">
+                    <i class="fas fa-trash"></i> Kill
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function logToTerminal(text, type = "info") {
+    const term = document.getElementById("terminal-output");
+    if (type === "keylog") {
+        const key = text.replace("[Keylogger] ", "");
+        const displayKey = key.length > 1 ? ` [${key}] ` : key;
+        if (term.lastChild && term.lastChild.classList && term.lastChild.classList.contains("keylog-stream")) {
+            term.lastChild.textContent += displayKey;
+        } else {
+            const div = document.createElement("div");
+            div.className = "keylog-stream";
+            div.style.color = "#fbbf24";
+            div.textContent = `> ${displayKey}`;
+            term.appendChild(div);
+        }
+    } else {
+        const div = document.createElement("div");
+        div.style.color = type === "system" ? "#3b82f6" : "#10b981";
+        div.textContent = `[${new Date().toLocaleTimeString()}] > ${text}`;
+        term.appendChild(div);
+    }
+    term.scrollTop = term.scrollHeight;
+}
+

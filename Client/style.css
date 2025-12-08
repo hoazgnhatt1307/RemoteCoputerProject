@@ -1,4 +1,4 @@
-:root {
+/* :root {
     --bg-main: #f3f4f6;
     --bg-panel: #ffffff;
     --bg-card: #ffffff;
@@ -157,3 +157,101 @@ toast-container {
 @keyframes fadeOut {
     to { opacity: 0; transform: translateY(-10px); }
 }
+
+.modal-overlay {
+    /* "Ghim" chặt vào màn hình máy tính bằng vw/vh */
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100vw !important;
+    height: 100vh !important;
+    
+    /* Màu nền tối */
+    background: rgba(0, 0, 0, 0.6);
+    z-index: 99999 !important; /* Đảm bảo nổi lên trên cùng */
+    
+    /* Căn giữa nội dung tuyệt đối */
+    display: flex !important;
+    justify-content: center !important;
+    align-items: center !important;
+    
+    /* Giữ hiệu ứng mờ nhưng tối ưu hơn */
+    backdrop-filter: blur(4px);
+}
+
+.modal-content-custom {
+    /* Reset vị trí để tránh xung đột */
+    position: relative !important;
+    margin: 0 !important;
+    transform: none !important; /* TẮT hiệu ứng transform gây nhảy hình */
+    
+    /* Giao diện khung trắng */
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh; /* Giới hạn chiều cao */
+    border-radius: 12px;
+    padding: 20px;
+    
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+}
+
+.toast-container {
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 30000 !important; /* Highest z-index */
+    pointer-events: none; /* Let mouse click through the container area */
+}
+
+.toast-msg {
+    pointer-events: auto; /* Enable clicks on the actual message */
+}
+
+/* Lưới ứng dụng */
+.app-grid-container {
+    flex: 1; /* Tự động chiếm hết khoảng trống còn lại */
+    overflow-y: auto; /* Cho phép cuộn dọc */
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); /* Tự chia cột */
+    gap: 12px;
+    padding: 10px;
+    background: #f9fafb;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+}
+
+/* Nút từng ứng dụng */
+.app-item-btn {
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 16px 8px;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+    height: 100%;
+}
+.app-item-btn:hover {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    transform: translateY(-3px);
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+.app-item-icon {
+    font-size: 28px;
+    color: #4b5563;
+    margin-bottom: 10px;
+}
+.app-item-name { font-size: 0.85rem; font-weight: 600; color: #1f2937; word-break: break-word;}
+
+@keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.hidden {
+    display: none !important;
+}
+

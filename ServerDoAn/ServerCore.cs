@@ -37,6 +37,36 @@ namespace RemoteControlServer
                 .ToList();
         }
 
+        // 1. Thêm hàm lấy danh sách Shortcut trong Start Menu
+        private static object GetInstalledApps()
+        {
+            var apps = new List<object>();
+            try
+            {
+                // Đường dẫn đến Start Menu chung của máy tính
+                string commonStartMenu = Environment.GetFolderPath(Environment.SpecialFolder.CommonStartMenu) + "\\Programs";
+                
+                // Lấy tất cả file .lnk (shortcut)
+                // SearchOption.AllDirectories: Quét cả thư mục con
+                var files = Directory.GetFiles(commonStartMenu, "*.lnk", SearchOption.AllDirectories);
+
+                foreach (var file in files)
+                {
+                    string fileName = Path.GetFileNameWithoutExtension(file);
+                    
+                    // Lọc bớt các file không cần thiết (Help, Uninstall...)
+                    if (!fileName.ToLower().Contains("uninstall") && 
+                        !fileName.ToLower().Contains("help") && 
+                        !fileName.ToLower().Contains("readme"))
+                    {
+                        apps.Add(new { name = fileName, path = file });
+                    }
+                }
+            }
+            catch { } // Bỏ qua lỗi nếu không truy cập được thư mục
+            return apps.OrderBy(x => ((dynamic)x).name).ToList();
+        }
+
         public static void Start(string url)
         {
             var server = new WebSocketServer(url);
@@ -144,15 +174,44 @@ namespace RemoteControlServer
                                 SendJson(socket, "LOG", "Lỗi Kill: " + ex.Message); 
                             }
                             break;
+                        // [ServerCore.cs] - Trong hàm HandleClientCommand
+
+                        case "GET_INSTALLED":
+                            SendJson(socket, "INSTALLED_LIST", GetInstalledApps());
+                            break;
+
                         case "START_APP":
-                            try {
-                                Process.Start(new ProcessStartInfo { FileName = packet.param, UseShellExecute = true });
-                                SendJson(socket, "LOG", $"Đã mở: {packet.param}");
+                            try 
+                            {
+                                string request = packet.param;
+                                string fileNameToRun = request;
+
+                                // [LOGIC THÔNG MINH] 
+                                // Nếu thấy có dấu chấm (.) mà không có khoảng trắng -> Tự hiểu là Web
+                                // Ví dụ: nhập "youtube.com" -> tự sửa thành "https://youtube.com"
+                                if (request.Contains(".") && !request.Contains(" ") && !request.StartsWith("http"))
+                                {
+                                    fileNameToRun = "https://" + request;
+                                }
+
+                                // Chạy lệnh (Windows tự tìm ứng dụng phù hợp: Web -> Chrome/Edge)
+                                Process.Start(new ProcessStartInfo { 
+                                    FileName = fileNameToRun, 
+                                    UseShellExecute = true 
+                                });
+
+                                SendJson(socket, "LOG", $"Đang mở: {fileNameToRun}...");
                                 
-                                // Đợi 1 chút cho App kịp khởi động rồi gửi danh sách mới
-                                Thread.Sleep(1000); 
-                                BroadcastJson("APP_LIST", GetCurrentApps());
-                            } catch { SendJson(socket, "LOG", "Lỗi mở App"); }
+                                // Cập nhật lại danh sách sau 2s để người dùng thấy trình duyệt hiện lên Task Manager
+                                Task.Run(() => {
+                                    Thread.Sleep(2000); 
+                                    BroadcastJson("APP_LIST", GetCurrentApps());
+                                });
+                            } 
+                            catch 
+                            { 
+                                SendJson(socket, "LOG", "Lỗi: Không thể mở yêu cầu này!"); 
+                            }
                             break;
                         case "SHUTDOWN": Process.Start("shutdown", "/s /t 5"); break;
                         case "RESTART": Process.Start("shutdown", "/r /t 5"); break;
@@ -188,3 +247,4 @@ namespace RemoteControlServer
 
     }
 }
+
