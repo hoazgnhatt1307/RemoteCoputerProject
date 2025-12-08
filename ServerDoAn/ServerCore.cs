@@ -15,6 +15,9 @@ namespace RemoteControlServer
         private static bool isStreaming = false;
         private const string SERVER_PASSWORD = "123";
 
+        private static readonly object _socketLock = new object();
+        private static byte[] _lastFrame = null;
+
         private static object GetCurrentApps()
         {
             // Lấy danh sách các ứng dụng có cửa sổ (Window)
@@ -92,24 +95,41 @@ namespace RemoteControlServer
             Task.Run(() => ScreenStreamLoop());
         }
 
-        public static void BroadcastLog(string message)
+public static void BroadcastLog(string message)
         {
             BroadcastJson("LOG", message);
+        }
+
+        // Hàm gửi an toàn (Có khóa lock)
+        private static void SafeSend(IWebSocketConnection socket, string message)
+        {
+            lock (_socketLock) // Chỉ cho phép 1 luồng gửi tại 1 thời điểm
+            {
+                if (socket.IsAvailable) socket.Send(message);
+            }
+        }
+
+        private static void SafeSend(IWebSocketConnection socket, byte[] data)
+        {
+            lock (_socketLock)
+            {
+                if (socket.IsAvailable) socket.Send(data);
+            }
         }
 
         private static void BroadcastJson(string type, object payload)
         {
             var json = JsonConvert.SerializeObject(new { type = type, payload = payload });
-            foreach (var socket in allSockets.ToList()) socket.Send(json);
+            foreach (var socket in allSockets.ToList()) 
+            {
+                SafeSend(socket, json); // Dùng hàm gửi an toàn
+            }
         }
 
         private static void SendJson(IWebSocketConnection socket, string type, object payload)
         {
-            if (socket.IsAvailable)
-            {
-                var json = JsonConvert.SerializeObject(new { type = type, payload = payload });
-                socket.Send(json);
-            }
+            var json = JsonConvert.SerializeObject(new { type = type, payload = payload });
+            SafeSend(socket, json); // Dùng hàm gửi an toàn
         }
 
         private static void HandleClientCommand(IWebSocketConnection socket, string jsonMessage)
@@ -145,11 +165,47 @@ namespace RemoteControlServer
                             SendJson(socket, "LOG", "Đã dừng Stream");
                             break;
                         case "CAPTURE_SCREEN":
-                            var imgBytes = SystemHelper.GetScreenShot(85L);
-                            if (imgBytes != null)
-                                SendJson(socket, "SCREEN_CAPTURE", Convert.ToBase64String(imgBytes));
-                            break;
-                        case "GET_APPS":
+                            try
+                                {
+                                    // 1. Chụp ảnh GỐC (Full HD, Nét căng) để LƯU vào máy
+                                    // imgBytes này rất nặng, chỉ dùng để lưu file, KHÔNG dùng để gửi
+                                    var imgBytes = SystemHelper.GetScreenShot(90L, 1.0);
+
+                                    if (imgBytes != null)
+                                    {
+                                        // --- LƯU FILE VÀO MÁY TÍNH ---
+                                        string baseFolder = AppDomain.CurrentDomain.BaseDirectory;
+                                        string folderPath = Path.Combine(baseFolder, "Screenshots");
+                                        if (!Directory.Exists(folderPath)) Directory.CreateDirectory(folderPath);
+
+                                        string fileName = $"IMG_{DateTime.Now:yyyyMMdd_HHmmss}.jpg";
+                                        string fullPath = Path.Combine(folderPath, fileName);
+                                        File.WriteAllBytes(fullPath, imgBytes);
+
+                                        // Gửi thông báo đã lưu thành công
+                                        SendJson(socket, "LOG", $"Đã lưu ảnh: {fileName}");
+
+
+                                        // --- [KHẮC PHỤC LỖI VĂNG Ở ĐÂY] ---
+                                        
+                                        // Thay vì gửi imgBytes (nặng), ta chụp lại một ảnh nhỏ (Thumbnail)
+                                        // Tỉ lệ 0.3 (30%) -> Ảnh chỉ nặng khoảng 20KB -> Gửi siêu nhanh
+                                        var previewBytes = SystemHelper.GetScreenShot(50L, 0.3); 
+
+                                        if (previewBytes != null)
+                                        {
+                                            // Gửi cái ảnh NHỎ này về Web để xem trước
+                                            SendJson(socket, "SCREEN_CAPTURE", Convert.ToBase64String(previewBytes));
+                                        }
+                                    }
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine("Lỗi Capture: " + ex.Message);
+                                    SendJson(socket, "LOG", "Lỗi: " + ex.Message);
+                                }
+                                break;
+                                                    case "GET_APPS":
                             SendJson(socket, "APP_LIST", GetCurrentApps());
                             break;
                         case "GET_PROCESS":
@@ -247,4 +303,5 @@ namespace RemoteControlServer
 
     }
 }
+
 

@@ -94,11 +94,27 @@ function handleJsonData(jsonString) {
 
             // Xử lý Ảnh chụp màn hình
             case "SCREEN_CAPTURE":
-                const img = document.getElementById("live-screen");
-                img.src = "data:image/jpeg;base64," + msg.payload;
-                img.style.display = "block";
-                document.getElementById("screen-placeholder").style.display = "none";
-                document.getElementById("monitorStatus").innerText = "HD Screenshot";
+                c// 1. Lấy dữ liệu ảnh
+                const imgSrc = "data:image/jpeg;base64," + msg.payload;
+
+                // 2. Hiển thị vào khung Preview bên phải (Thay vì khung Stream)
+                const previewImg = document.getElementById("captured-preview");
+                const previewText = document.getElementById("preview-text");
+                const saveBadge = document.getElementById("save-badge");
+
+                if (previewImg) {
+                    previewImg.src = imgSrc;
+                    previewImg.classList.remove("hidden");
+                    previewText.style.display = "none"; // Ẩn chữ "Chưa có ảnh"
+                    saveBadge.classList.remove("hidden"); // Hiện chữ "Saved"
+                    
+                    // Hiệu ứng nháy nhẹ để biết ảnh mới
+                    previewImg.style.opacity = "0.5";
+                    setTimeout(() => previewImg.style.opacity = "1", 300);
+                }
+                
+                // (Tùy chọn) Vẫn hiện thông báo Toast
+                if (typeof showToast === "function") showToast("Ảnh đã được lưu và gửi về!", "success");
                 break;
 
             // Xử lý Log & Thông báo
@@ -291,3 +307,7 @@ function logToTerminal(text, type = "info") {
     term.scrollTop = term.scrollHeight;
 }
 
+function viewFullImage(imgElement) {
+    const w = window.open("");
+    w.document.write(`<img src="${imgElement.src}" style="width:100%">`);
+}
