@@ -1,6 +1,6 @@
 using System;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Models
 {
     // DTO: Data Transfer Object - Gói tin giao tiếp
     public class WebPacket

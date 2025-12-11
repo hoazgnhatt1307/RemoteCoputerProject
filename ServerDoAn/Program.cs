@@ -1,8 +1,12 @@
 ﻿using System;
+using RemoteControlServer.Core;
+using RemoteControlServer.Services;
 using System.Text;
 using System.Threading;
-using System.Windows.Forms; // Cần file .csproj có UseWindowsForms mới dùng được cái này
+using System.Windows.Forms;
 using System.Runtime.InteropServices;
+
+
 
 namespace RemoteControlServer
 {
@@ -43,14 +47,6 @@ namespace RemoteControlServer
                 return;
             }
 
-            // 2. Kích hoạt Keylogger
-            // Hook vào luồng chính, nơi Application.Run sẽ chạy bên dưới
-            KeyLoggerService.StartHook((key) => {
-                // Callback: Khi có phím ấn -> Gửi log về Client
-                ServerCore.BroadcastLog($"[Keylogger] {key}");
-            });
-            
-            Console.WriteLine("[System] Keylogger Service: Active");
             Console.WriteLine(">> Server đang chạy... Nhấn Ctrl+C để thoát.");
 
             // 3. Giữ ứng dụng luôn chạy (Message Loop)

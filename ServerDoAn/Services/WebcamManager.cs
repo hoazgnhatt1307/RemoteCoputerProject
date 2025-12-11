@@ -4,7 +4,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using OpenCvSharp;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Services
 {
     public static class WebcamManager
     {

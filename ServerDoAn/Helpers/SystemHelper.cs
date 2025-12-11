@@ -5,7 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Windows.Forms;
 
-namespace RemoteControlServer
+namespace RemoteControlServer.Helpers
 {
     public static class SystemHelper
     {
