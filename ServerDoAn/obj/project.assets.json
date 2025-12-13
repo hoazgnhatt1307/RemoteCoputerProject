@@ -479,11 +479,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "C:\\Hoàng Nhật\\Cơ sở ngành\\MMT\\Đồ án\\ServerDoAn\\ServerDoAn.csproj",
+      "projectUniqueName": "C:\\Hoàng Nhật\\Cơ sở ngành\\MMT\\do an\\ServerDoAn\\ServerDoAn.csproj",
       "projectName": "ServerDoAn",
-      "projectPath": "C:\\Hoàng Nhật\\Cơ sở ngành\\MMT\\Đồ án\\ServerDoAn\\ServerDoAn.csproj",
+      "projectPath": "C:\\Hoàng Nhật\\Cơ sở ngành\\MMT\\do an\\ServerDoAn\\ServerDoAn.csproj",
       "packagesPath": "C:\\Users\\Admin\\.nuget\\packages\\",
-      "outputPath": "C:\\Hoàng Nhật\\Cơ sở ngành\\MMT\\Đồ án\\ServerDoAn\\obj\\",
+      "outputPath": "C:\\Hoàng Nhật\\Cơ sở ngành\\MMT\\do an\\ServerDoAn\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"

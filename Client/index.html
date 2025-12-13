@@ -4,117 +4,133 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>RCS - Remote Control System</title>
-    
-    <!-- Fonts & External Libs -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Consolas&display=swap" rel="stylesheet"/>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
-
-    <!-- Modular CSS Loading -->
-    <!-- Load biến trước để các file sau sử dụng -->
-    <link rel="stylesheet" href="css/variables.css" />
-    <link rel="stylesheet" href="css/layout.css" />
-    <link rel="stylesheet" href="css/components.css" />
-    
-    <!-- Load Module Styles (Có thể gộp thành modules.css nếu muốn gọn) -->
-    <link rel="stylesheet" href="css/modules/terminal.css" />
-    <link rel="stylesheet" href="css/modules/webcam.css" />
-    <link rel="stylesheet" href="css/modules/keylogger.css" />
-    <link rel="stylesheet" href="css/modules/monitor.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&family=Consolas&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="style.css" />
   </head>
-  
   <body>
-    <!-- SECTION: LOGIN OVERLAY -->
-    <section id="login-overlay" class="overlay-container">
+    <div id="login-overlay">
       <div class="login-card">
         <h2 class="mb-4 fw-bold text-primary">
           <i class="fas fa-shield-alt"></i> RCS Login
         </h2>
-        <form id="login-form" onsubmit="event.preventDefault();">
-            <div class="mb-3 text-start">
-            <label class="form-label small fw-bold">Server IP</label>
-            <input type="text" id="server-ip" class="form-control mb-2" value="localhost" />
-            <div class="row">
-                <div class="col-6">
-                <label class="form-label small fw-bold">Port</label>
-                <input type="number" id="server-port" class="form-control mb-2" value="8181" />
-                </div>
-                <div class="col-6">
-                <label class="form-label small fw-bold">Password</label>
-                <input type="password" id="auth-pass" class="form-control mb-2" value="123" />
-                </div>
+        <div class="mb-3 text-start">
+          <label class="form-label small fw-bold">Server IP</label>
+          <input
+            type="text"
+            id="server-ip"
+            class="form-control mb-2"
+            placeholder="Ex: 192.168.1.5"
+            value="localhost"
+          />
+          <div class="row">
+            <div class="col-6">
+              <label class="form-label small fw-bold">Port</label>
+              <input
+                type="number"
+                id="server-port"
+                class="form-control mb-2"
+                value="8181"
+              />
             </div>
+            <div class="col-6">
+              <label class="form-label small fw-bold">Password</label>
+              <input
+                type="password"
+                id="auth-pass"
+                class="form-control mb-2"
+                value="123"
+              />
             </div>
-            <button type="submit" id="btn-connect" class="btn btn-primary w-100 fw-bold py-2">
-            CONNECT SYSTEM
-            </button>
-            <p id="login-error" class="mt-3 text-danger fw-bold small"></p>
-        </form>
-      </div>
-    </section>
-
-    <!-- APP WRAPPER -->
-    <div class="d-flex disabled-ui" id="app-wrapper">
-      
-      <!-- ASIDE: SIDEBAR NAVIGATION -->
-      <aside id="sidebar">
-        <div class="sidebar-heading" id="logo-heading" style="cursor: pointer;" title="Quay về Dashboard">
-          <i class="fas fa-network-wired"></i> <span>SYSTEM CORE</span>
+          </div>
         </div>
-        <nav class="list-group list-group-flush mt-3">
-          <button class="list-group-item active" data-tab="dashboard">
-            <i class="fas fa-chart-line"></i> <span>Dashboard</span>
-          </button>
-          <button class="list-group-item" data-tab="monitor">
-            <i class="fas fa-desktop"></i> <span>Screen Monitor</span>
-          </button>
-          <button class="list-group-item" data-tab="webcam">
-            <i class="fas fa-camera"></i> <span>Webcam Control</span>
-          </button>
-          <button class="list-group-item" data-tab="processes">
-            <i class="fas fa-tasks"></i> <span>Process & Apps</span>
-          </button>
-          <button class="list-group-item" data-tab="files" id="nav-files">
-            <i class="fas fa-folder-open"></i> <span>File Manager</span>
-          </button>
-          <button class="list-group-item" data-tab="terminal">
-            <i class="fas fa-terminal"></i> <span>Terminal Logs</span>
-          </button>
-          <button class="list-group-item text-danger mt-auto mb-4" id="btn-disconnect">
-            <i class="fas fa-sign-out-alt"></i> <span>Disconnect</span>
-          </button>
-        </nav>
-      </aside>
+        <button
+          onclick="initiateConnection()"
+          class="btn btn-primary w-100 fw-bold py-2"
+        >
+          CONNECT SYSTEM
+        </button>
+        <p id="login-error" class="mt-3 text-danger fw-bold small"></p>
+      </div>
+    </div>
 
-      <!-- MAIN CONTENT AREA -->
-      <main id="page-content">
-        <header class="d-flex justify-content-between align-items-center mb-4">
-          <div class="d-flex align-items-center">
-            <button id="menu-toggle" class="btn btn-light border-0 me-3">
-              <i class="fas fa-bars"></i>
-            </button>
-            <h3 class="fw-bold text-dark m-0" id="page-title">Overview</h3>
-          </div>
-          <div class="d-flex align-items-center gap-3">
-            <!-- Theme Toggle Button -->
-            <button 
-              id="theme-toggle" 
-              class="btn btn-outline-secondary btn-sm"
-              title="Toggle Dark Mode"
-              style="padding: 0.5rem; width: 40px; height: 40px; border-radius: 50%;"
-            >
-              <i class="fas fa-moon"></i>
-            </button>
-            
-            <!-- Connection Badge -->
-            <span id="connection-badge" class="status-badge status-offline">
-              <i class="fas fa-circle"></i> Disconnected
-            </span>
-          </div>
-        </header>
+    <div class="d-flex disabled-ui" id="main-interface">
+      <div id="sidebar-wrapper">
+        <div class="sidebar-heading">
+          <i class="fas fa-network-wired"></i> SYSTEM CORE
+        </div>
+        <div class="list-group list-group-flush mt-3">
+          <a
+            href="#"
+            class="list-group-item active"
+            onclick="switchTab('dashboard', this)"
+          >
+            <i class="fas fa-chart-line"></i> Dashboard
+          </a>
+          <a
+            href="#"
+            class="list-group-item"
+            onclick="switchTab('monitor', this)"
+          >
+            <i class="fas fa-desktop"></i> Screen Monitor
+          </a>
+          <a
+            href="#"
+            class="list-group-item"
+            onclick="switchTab('webcam', this)"
+          >
+            <i class="fas fa-camera"></i> Webcam Control
+          </a>
+          <a
+            href="#"
+            class="list-group-item"
+            onclick="switchTab('processes', this)"
+          >
+            <i class="fas fa-tasks"></i> Process & Apps
+          </a>
+          <a
+            href="#"
+            class="list-group-item"
+            onclick="switchTab('files', this); getDrives();"
+          >
+            <i class="fas fa-folder-open"></i> File Manager
+          </a>
+          <a
+            href="#"
+            class="list-group-item"
+            onclick="switchTab('terminal', this)"
+          >
+            <i class="fas fa-terminal"></i> Terminal Logs
+          </a>
+          <a
+            href="#"
+            class="list-group-item text-danger mt-auto mb-4"
+            onclick="disconnect()"
+          >
+            <i class="fas fa-sign-out-alt"></i> Disconnect
+          </a>
+        </div>
+      </div>
 
-        <!-- Dynamic Content Sections -->
-        <section id="tab-dashboard" class="tab-content active">
+      <div id="page-content-wrapper">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <h3 class="fw-bold text-dark m-0" id="pageTitle">Overview</h3>
+          <span id="connectionBadge" class="status-badge status-offline">
+            <i class="fas fa-circle"></i> Disconnected
+          </span>
+        </div>
+
+        <div id="tab-dashboard" class="tab-content active">
           <div class="row">
             <div class="col-md-6">
               <div class="card-custom">
@@ -192,9 +208,9 @@
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section id="tab-monitor" class="tab-content">
+        <div id="tab-monitor" class="tab-content">
           <div class="row">
             <div class="col-lg-8">
               <div class="card-custom h-100">
@@ -202,67 +218,26 @@
                   <span
                     ><i class="fas fa-video text-danger"></i> Live Stream</span
                   >
-                  <div class="d-flex gap-2">
+                  <div>
                     <button
-                      id="btn-monitor-toggle"
-                      onclick="toggleMonitor()"
+                      onclick="sendCommand('START_STREAM')"
                       class="btn btn-success btn-sm"
                     >
-                      <i class="fas fa-play"></i> <span id="btn-monitor-text">Start</span>
+                      <i class="fas fa-play"></i> Start
                     </button>
-                    
-                    <!-- Display Controls -->
-                    <div class="btn-group btn-group-sm" role="group">
-                      <button 
-                        class="btn btn-outline-secondary" 
-                        onclick="monitorZoom('out')"
-                        title="Zoom Out"
-                      >
-                        <i class="fas fa-search-minus"></i>
-                      </button>
-                      <button 
-                        class="btn btn-outline-secondary" 
-                        onclick="monitorZoom('reset')"
-                        title="Reset Zoom (100%)"
-                      >
-                        <i class="fas fa-compress-arrows-alt"></i>
-                      </button>
-                      <button 
-                        class="btn btn-outline-secondary" 
-                        onclick="monitorZoom('in')"
-                        title="Zoom In"
-                      >
-                        <i class="fas fa-search-plus"></i>
-                      </button>
-                    </div>
-                    
-                    <button 
-                      class="btn btn-outline-primary btn-sm" 
-                      onclick="monitorToggleFit()"
-                      title="Toggle Fit Mode"
-                      id="btn-monitor-fit"
+                    <button
+                      onclick="sendCommand('STOP_STREAM')"
+                      class="btn btn-secondary btn-sm"
                     >
-                      <i class="fas fa-expand-arrows-alt"></i>
-                    </button>
-                    
-                    <button 
-                      class="btn btn-outline-warning btn-sm" 
-                      onclick="monitorFullscreen()"
-                      title="Fullscreen"
-                    >
-                      <i class="fas fa-expand"></i>
+                      <i class="fas fa-stop"></i> Stop
                     </button>
                   </div>
                 </div>
 
-                <div class="monitor-frame" id="monitor-container">
-                  <!-- Zoom Level Indicator -->
-                  <div class="zoom-indicator" id="monitor-zoom-level">100%</div>
-                  
+                <div class="monitor-frame" style="min-height: 400px">
                   <div
                     id="screen-placeholder"
                     class="text-secondary text-center"
-                    style="display: flex; flex-direction: column; align-items: center; justify-content: center;"
                   >
                     <i class="fas fa-satellite-dish fa-3x mb-3"></i><br />Stream
                     Offline
@@ -271,8 +246,11 @@
                     id="live-screen"
                     src=""
                     alt="Live Stream"
-                    style="display: none;"
+                    style="width: 100%; height: auto"
                   />
+                  <div class="monitor-overlay-text" id="monitorStatus">
+                    Ready
+                  </div>
                 </div>
               </div>
             </div>
@@ -332,9 +310,9 @@
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section id="tab-webcam" class="tab-content">
+        <div id="tab-webcam" class="tab-content">
           <div class="card-custom">
             <div class="card-header-custom">
               <span
@@ -346,57 +324,26 @@
 
             <div class="row p-3">
               <div class="col-md-8 text-center">
-                <!-- Webcam Toolbar -->
-                <div class="webcam-toolbar mb-2">
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button 
-                      class="btn btn-outline-secondary" 
-                      onclick="webcamZoom('out')"
-                      title="Zoom Out"
-                    >
-                      <i class="fas fa-search-minus"></i>
-                    </button>
-                    <button 
-                      class="btn btn-outline-secondary" 
-                      onclick="webcamZoom('reset')"
-                      title="Reset Zoom"
-                    >
-                      <i class="fas fa-compress-arrows-alt"></i>
-                    </button>
-                    <button 
-                      class="btn btn-outline-secondary" 
-                      onclick="webcamZoom('in')"
-                      title="Zoom In"
-                    >
-                      <i class="fas fa-search-plus"></i>
-                    </button>
-                  </div>
-                  
-                  <button 
-                    class="btn btn-outline-primary btn-sm ms-2" 
-                    onclick="webcamToggleFit()"
-                    title="Toggle Fit Mode"
-                    id="btn-webcam-fit"
-                  >
-                    <i class="fas fa-expand-arrows-alt"></i>
-                  </button>
-                  
-                  <button 
-                    class="btn btn-outline-warning btn-sm ms-2" 
-                    onclick="webcamFullscreen()"
-                    title="Fullscreen"
-                  >
-                    <i class="fas fa-expand"></i>
-                  </button>
-                  
-                  <span class="badge bg-info ms-3" id="webcam-zoom-level">100%</span>
-                </div>
-                
-                <div class="webcam-container" id="webcam-container">
+                <div
+                  style="
+                    background: #000;
+                    min-height: 400px;
+                    border-radius: 8px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    overflow: hidden;
+                  "
+                >
                   <img
                     id="webcam-feed"
                     src=""
-                    style="display: none;"
+                    style="
+                      width: 100%;
+                      height: 100%;
+                      object-fit: contain;
+                      display: none;
+                    "
                   />
 
                   <canvas id="video-canvas" style="display: none"></canvas>
@@ -414,12 +361,16 @@
                   </h5>
 
                   <button
-                    id="btn-webcam-toggle"
-                    onclick="toggleWebcam()"
+                    onclick="sendCommand('START_WEBCAM')"
                     class="btn btn-success w-100 mb-2 fw-bold"
-                    style="transition: all 0.3s ease;"
                   >
-                    <i class="fas fa-power-off"></i> <span id="btn-webcam-text">BẬT WEBCAM</span>
+                    <i class="fas fa-power-off"></i> BẬT WEBCAM
+                  </button>
+                  <button
+                    onclick="sendCommand('STOP_WEBCAM')"
+                    class="btn btn-secondary w-100 mb-4"
+                  >
+                    <i class="fas fa-stop-circle"></i> TẮT
                   </button>
 
                   <hr />
@@ -427,10 +378,6 @@
                   <h5 class="fw-bold mb-3 text-danger">
                     <i class="fas fa-circle"></i> Recording
                   </h5>
-                  <div id="recording-timer-container" class="recording-timer-container mb-2" style="display: none;">
-                    <span class="label">Còn lại:</span>
-                    <span id="recording-countdown" class="countdown">00s</span>
-                  </div>
                   <div class="mb-3">
                     <label class="form-label small fw-bold"
                       >Thời lượng (giây):</label
@@ -446,20 +393,10 @@
                   </div>
 
                   <button
-                    id="btn-webcam-record"
                     onclick="startRecordWebcam()"
                     class="btn btn-danger w-100 fw-bold"
-                    disabled
                   >
                     <i class="fas fa-record-vinyl"></i> GHI HÌNH & LƯU
-                  </button>
-                  <button
-                    id="btn-webcam-cancel"
-                    onclick="cancelRecordWebcam()"
-                    class="btn btn-secondary w-100 fw-bold mt-2"
-                    disabled
-                  >
-                    <i class="fas fa-stop"></i> HỦY GHI
                   </button>
                   <small
                     class="text-muted d-block mt-2 fst-italic"
@@ -472,92 +409,56 @@
               </div>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section id="tab-files" class="tab-content">
-          <div class="card-custom h-100 d-flex flex-column">
-            <!-- Navigation Breadcrumb -->
-            <div class="bg-light border-bottom px-4 py-3">
-              <nav aria-label="breadcrumb">
-                <ol class="breadcrumb mb-0" id="file-breadcrumb">
-                  <li class="breadcrumb-item">
-                    <a href="#" onclick="getDrives(); return false;" class="text-primary text-decoration-none">
-                      <i class="fas fa-home"></i> My Computer
-                    </a>
-                  </li>
-                  <li class="breadcrumb-item active" aria-current="page" id="current-path-breadcrumb"></li>
-                </ol>
-              </nav>
-            </div>
-
-            <!-- Toolbar -->
-            <div class="bg-white border-bottom px-4 py-3">
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex gap-2">
-                  <button class="btn btn-primary" onclick="getDrives()" id="btn-file-home">
-                    <i class="fas fa-home me-2"></i>Home
-                  </button>
-                  <button class="btn btn-outline-primary" onclick="createNewFolder()">
-                    <i class="fas fa-folder-plus me-2"></i>New Folder
-                  </button>
-                  <button class="btn btn-outline-secondary" onclick="uploadFile()">
-                    <i class="fas fa-upload me-2"></i>Upload
-                  </button>
-                </div>
-                <div class="input-group" style="max-width: 350px;">
-                  <span class="input-group-text bg-white border-end-0">
-                    <i class="fas fa-search text-muted"></i>
-                  </span>
-                  <input 
-                    type="text" 
-                    class="form-control border-start-0 ps-0" 
-                    placeholder="Search files and folders..."
-                    id="file-search-input"
-                    onkeyup="searchFiles()"
-                  />
-                </div>
+        <div id="tab-files" class="tab-content">
+          <div class="card-custom h-100">
+            <div class="card-header-custom">
+              <span
+                ><i class="fas fa-folder-open text-warning"></i> File
+                Explorer</span
+              >
+              <div class="d-flex align-items-center">
+                <span
+                  id="current-path"
+                  class="me-3 fw-bold text-secondary small"
+                  >My Computer</span
+                >
+                <button class="btn btn-primary btn-sm" onclick="getDrives()">
+                  <i class="fas fa-home"></i> Home
+                </button>
               </div>
             </div>
 
-            <!-- File List Table -->
-            <div class="flex-grow-1 overflow-auto" style="background: #fafafa;">
-              <table class="table table-hover bg-white mb-0" id="file-table">
-                <thead class="sticky-top" style="background: #f8f9fa; border-bottom: 2px solid #e9ecef;">
+            <div
+              class="table-responsive p-0"
+              style="height: 500px; overflow-y: auto"
+            >
+              <table
+                class="table table-hover table-custom mb-0"
+                id="file-table"
+              >
+                <thead class="sticky-top bg-white shadow-sm">
                   <tr>
-                    <th style="width: 60px;" class="text-center ps-4">
-                      <span class="text-muted">Type</span>
-                    </th>
-                    <th style="width: 45%;" class="ps-3">
-                      <span class="text-muted fw-semibold">Name</span>
-                    </th>
-                    <th style="width: 15%;">
-                      <span class="text-muted fw-semibold">Last Modified</span>
-                    </th>
-                    <th style="width: 15%;">
-                      <span class="text-muted fw-semibold">Size</span>
-                    </th>
-                    <th style="width: 150px;" class="text-end pe-4">
-                      <span class="text-muted fw-semibold">Actions</span>
-                    </th>
+                    <th style="width: 50px" class="text-center">Type</th>
+                    <th>Name</th>
+                    <th>Size</th>
+                    <th style="width: 120px" class="text-center">Action</th>
                   </tr>
                 </thead>
                 <tbody id="file-list-body">
                   <tr>
-                    <td colspan="5" class="text-center text-muted py-5">
-                      <div class="d-flex flex-column align-items-center justify-content-center" style="min-height: 300px;">
-                        <i class="fas fa-folder-open fa-4x mb-3 text-black-50"></i>
-                        <p class="mb-2 fw-semibold">No files yet</p>
-                        <p class="small text-secondary">Click "My Computer" to browse drives</p>
-                      </div>
+                    <td colspan="4" class="text-center text-muted">
+                      Select a drive to start...
                     </td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section id="tab-processes" class="tab-content">
+        <div id="tab-processes" class="tab-content">
           <div class="card-custom">
             <div class="card-header-custom">
               <span
@@ -598,9 +499,9 @@
               </table>
             </div>
           </div>
-        </section>
+        </div>
 
-        <section id="tab-terminal" class="tab-content">
+        <div id="tab-terminal" class="tab-content">
           <div class="row h-100 g-3">
             <div class="col-md-3">
               <div class="card-custom h-100 d-flex flex-column">
@@ -681,14 +582,10 @@
               </div>
             </div>
           </div>
-        </section>
-      </main>
+        </div>
+      </div>
     </div>
 
-    <!-- UI COMPONENTS: MODALS & TOASTS -->
-    <div id="toast-container" class="toast-container"></div>
-    
-    <!-- App Library Modal -->
     <div id="app-library-modal" class="modal-overlay hidden">
       <div class="modal-content-custom">
         <div class="d-flex justify-content-between align-items-center mb-3">
@@ -717,8 +614,7 @@
       </div>
     </div>
 
-    <!-- JAVASCRIPT: MODULE ENTRY POINT -->
-    <!-- Quan trọng: type="module" cho phép dùng import/export -->
-    <script type="module" src="js/main.js"></script>
+    <script src="script.js"></script>
+    <div id="toast-container" class="toast-container"></div>
   </body>
 </html>
