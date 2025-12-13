@@ -215,20 +215,19 @@
             <div class="col-lg-8">
               <div class="card-custom h-100">
                 <div class="card-header-custom">
-                  <span
-                    ><i class="fas fa-video text-danger"></i> Live Stream</span
-                  >
-                  <div>
-                    <button
-                      onclick="sendCommand('START_STREAM')"
-                      class="btn btn-success btn-sm"
-                    >
+                  <span><i class="fas fa-video text-danger"></i> Live Stream</span>
+                  
+                  <div class="d-flex align-items-center gap-2"> 
+                    
+                    <div class="form-check form-switch me-3">
+                        <input class="form-check-input" type="checkbox" id="control-toggle" onchange="toggleControl(this)">
+                        <label class="form-check-label fw-bold small" for="control-toggle">Remote Control</label>
+                    </div>
+
+                    <button onclick="sendCommand('START_STREAM')" class="btn btn-success btn-sm">
                       <i class="fas fa-play"></i> Start
                     </button>
-                    <button
-                      onclick="sendCommand('STOP_STREAM')"
-                      class="btn btn-secondary btn-sm"
-                    >
+                    <button onclick="sendCommand('STOP_STREAM')" class="btn btn-secondary btn-sm">
                       <i class="fas fa-stop"></i> Stop
                     </button>
                   </div>

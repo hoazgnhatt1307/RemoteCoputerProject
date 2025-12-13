@@ -495,6 +495,32 @@ namespace RemoteControlServer.Core
                                 SendJson(socket, "LOG", "Lỗi xử lý tạo folder: " + ex.Message);
                             }
                             break;
+
+                        case "MOUSE_MOVE":
+                            try
+                            {
+                                dynamic pos = JsonConvert.DeserializeObject(packet.param);
+                                SystemHelper.SetCursorPosition((double)pos.x, (double)pos.y);
+                            }
+                            catch { }
+                            break;
+
+                        case "MOUSE_CLICK":
+                            try
+                            {
+                                dynamic clickInfo = JsonConvert.DeserializeObject(packet.param);
+                                SystemHelper.MouseClick((string)clickInfo.btn, (string)clickInfo.action);
+                            }
+                            catch { }
+                            break;
+
+                        case "KEY_PRESS":
+                            try
+                            {
+                                SystemHelper.SimulateKeyPress(packet.param);
+                            }
+                            catch { }
+                            break;
                     }
                 }
             }

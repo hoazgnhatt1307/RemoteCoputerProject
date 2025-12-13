@@ -958,3 +958,86 @@ function createNewFolder() {
         sendCmd("CREATE_FOLDER", JSON.stringify(payload));
     }
 }
+
+let isControlEnabled = false;
+let lastMoveTime = 0;
+
+function toggleControl(checkbox) {
+    isControlEnabled = checkbox.checked;
+    const screenImg = document.getElementById("live-screen");
+    
+    if (isControlEnabled) {
+        showToast("Đã BẬT chế độ điều khiển!", "success");
+        screenImg.style.cursor = "crosshair"; // Đổi con trỏ thành dấu cộng
+        
+        // Bắt sự kiện bàn phím
+        document.addEventListener("keydown", handleRemoteKey);
+    } else {
+        showToast("Đã TẮT chế độ điều khiển!", "info");
+        screenImg.style.cursor = "default";
+        
+        // Hủy sự kiện bàn phím
+        document.removeEventListener("keydown", handleRemoteKey);
+    }
+}
+
+// Tự động gắn sự kiện chuột khi trang web tải xong
+document.addEventListener("DOMContentLoaded", () => {
+    const screenImg = document.getElementById("live-screen");
+    
+    if (screenImg) {
+        // 1. Di chuyển chuột
+        screenImg.addEventListener("mousemove", (e) => {
+            if (!isControlEnabled) return;
+
+            // Giới hạn gửi tin (Throttle) 50ms/lần để tránh lag
+            const now = Date.now();
+            if (now - lastMoveTime < 50) return;
+            lastMoveTime = now;
+
+            const rect = screenImg.getBoundingClientRect();
+            // Tính tọa độ % (từ 0.0 đến 1.0)
+            let rawX = (e.clientX - rect.left) / rect.width;
+            let rawY = (e.clientY - rect.top) / rect.height;
+
+            // Đảm bảo không bao giờ < 0 hoặc > 1
+            const xPercent = Math.max(0, Math.min(1, rawX));
+            const yPercent = Math.max(0, Math.min(1, rawY));
+
+            sendCmd("MOUSE_MOVE", JSON.stringify({ x: xPercent, y: yPercent }));
+        });
+
+        // 2. Click chuột
+        screenImg.addEventListener("mousedown", (e) => {
+            if (!isControlEnabled) return;
+            e.preventDefault(); // Chặn bôi đen ảnh
+            const btn = e.button === 0 ? "left" : (e.button === 2 ? "right" : "middle");
+            sendCmd("MOUSE_CLICK", JSON.stringify({ btn: btn, action: "down" }));
+        });
+
+        screenImg.addEventListener("mouseup", (e) => {
+            if (!isControlEnabled) return;
+            e.preventDefault();
+            const btn = e.button === 0 ? "left" : (e.button === 2 ? "right" : "middle");
+            sendCmd("MOUSE_CLICK", JSON.stringify({ btn: btn, action: "up" }));
+        });
+
+        // Chặn menu chuột phải
+        screenImg.addEventListener("contextmenu", (e) => {
+            if (isControlEnabled) e.preventDefault();
+        });
+    }
+});
+
+// 3. Xử lý bàn phím
+function handleRemoteKey(e) {
+    if (!isControlEnabled) return;
+    
+    // Gửi mã phím về Server
+    sendCmd("KEY_PRESS", e.key);
+
+    // Chặn hành động mặc định của một số phím (như F5, Tab)
+    if (["F5", "Tab", "Alt", "ContextMenu"].includes(e.key)) {
+        e.preventDefault();
+    }
+}
