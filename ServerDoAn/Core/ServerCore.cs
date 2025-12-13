@@ -468,6 +468,33 @@ namespace RemoteControlServer.Core
                                 SendJson(socket, "LOG", "Lỗi xử lý Upload: " + ex.Message);
                             }
                             break;
+                        
+                        case "CREATE_FOLDER":
+                            try
+                            {
+                                // Client gửi JSON: { path: "D:\\Data", name: "NewFolder" }
+                                dynamic folderInfo = JsonConvert.DeserializeObject(packet.param);
+                                string currentPath = folderInfo.path;
+                                string newName = folderInfo.name;
+
+                                string createResult = FileManagerService.CreateDirectory(currentPath, newName);
+
+                                if (createResult == "OK")
+                                {
+                                    SendJson(socket, "LOG", $"Đã tạo thư mục: {newName}");
+                                    // Tự động tải lại danh sách file để hiện thư mục mới
+                                    SendJson(socket, "FILE_LIST", FileManagerService.GetDirectoryContent(currentPath));
+                                }
+                                else
+                                {
+                                    SendJson(socket, "LOG", createResult);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                SendJson(socket, "LOG", "Lỗi xử lý tạo folder: " + ex.Message);
+                            }
+                            break;
                     }
                 }
             }

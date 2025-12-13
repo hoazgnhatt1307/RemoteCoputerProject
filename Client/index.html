@@ -414,30 +414,28 @@
         <div id="tab-files" class="tab-content">
           <div class="card-custom h-100">
             <div class="card-header-custom">
-              <span
-                ><i class="fas fa-folder-open text-warning"></i> File
-                Explorer</span
-              >
+              <span><i class="fas fa-folder-open text-warning"></i> File Explorer</span>
+              
               <div class="d-flex align-items-center">
-                <span
-                  id="current-path"
-                  class="me-3 fw-bold text-secondary small"
-                  >My Computer</span
-                >
+                <span id="current-path" class="me-3 fw-bold text-secondary small">My Computer</span>
+                
+                <button class="btn btn-warning btn-sm me-2 text-dark fw-bold" onclick="createNewFolder()" title="Tạo thư mục mới">
+                    <i class="fas fa-folder-plus"></i> New Folder
+                </button>
+
+                <button class="btn btn-success btn-sm me-2" onclick="triggerUpload()">
+                    <i class="fas fa-cloud-upload-alt"></i> Upload
+                </button>
+                <input type="file" id="upload-input" style="display: none" onchange="handleFileUpload(this)">
+
                 <button class="btn btn-primary btn-sm" onclick="getDrives()">
                   <i class="fas fa-home"></i> Home
                 </button>
               </div>
             </div>
-
-            <div
-              class="table-responsive p-0"
-              style="height: 500px; overflow-y: auto"
-            >
-              <table
-                class="table table-hover table-custom mb-0"
-                id="file-table"
-              >
+            
+            <div class="table-responsive p-0" style="height: 500px; overflow-y: auto">
+              <table class="table table-hover table-custom" id="file-table">
                 <thead class="sticky-top bg-white shadow-sm">
                   <tr>
                     <th style="width: 50px" class="text-center">Type</th>
@@ -455,7 +453,7 @@
                 </tbody>
               </table>
             </div>
-          </div>
+            </div>
         </div>
 
         <div id="tab-processes" class="tab-content">

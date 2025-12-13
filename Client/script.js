@@ -154,7 +154,7 @@ function handleJsonData(jsonString) {
         downloadVideoFromBase64(msg.payload);
         showToast("Đã nhận được video từ Server!", "success");
         break;
-        
+
       case "FILE_LIST":
             renderFileManager(msg.payload);
             break;
@@ -877,5 +877,84 @@ function renderWebcamFrame(url) {
             statusBadge.className = "badge bg-success";
             statusBadge.innerText = "LIVE";
         }
+    }
+}
+
+function triggerUpload() {
+    // Kiểm tra: Không cho upload nếu đang ở màn hình danh sách ổ đĩa (My Computer)
+    if (!currentPath || currentPath === "My Computer" || currentPath === "") {
+        showToast("Vui lòng chọn một thư mục ổ đĩa để upload!", "error");
+        return;
+    }
+    // Kích hoạt thẻ input file
+    document.getElementById("upload-input").click();
+}
+
+// 2. Hàm xử lý khi người dùng đã chọn file
+function handleFileUpload(inputElement) {
+    const file = inputElement.files[0];
+    if (!file) return; // Người dùng hủy chọn
+
+    // Giới hạn dung lượng Client (ví dụ 50MB) để tránh treo trình duyệt khi convert Base64
+    // Lưu ý: Base64 sẽ làm tăng kích thước file lên khoảng 33%
+    if (file.size > 50 * 1024 * 1024) {
+        showToast("File quá lớn! Vui lòng chọn file < 50MB", "error");
+        inputElement.value = ""; // Reset input
+        return;
+    }
+
+    showToast(`Đang xử lý upload: ${file.name}...`, "info");
+
+    const reader = new FileReader();
+
+    // Khi đọc file xong
+    reader.onload = function(e) {
+        // e.target.result có dạng: "data:application/pdf;base64,JVBERi0xLjQK..."
+        // Ta cần tách bỏ phần header "data:...;base64," chỉ lấy chuỗi mã hóa phía sau
+        const rawBase64 = e.target.result.split(',')[1]; 
+
+        // Tạo payload đúng theo cấu trúc ServerCore.cs yêu cầu (dòng 345)
+        /* dynamic uploadInfo = JsonConvert.DeserializeObject(packet.param);
+           string targetFolder = uploadInfo.path;
+           string fileName = uploadInfo.fileName;
+           string base64Data = uploadInfo.data;
+        */
+        const payload = {
+            fileName: file.name,
+            path: currentPath,
+            data: rawBase64
+        };
+
+        // Gửi lệnh lên Server
+        // ServerCore mong đợi param là một JSON string chứa thông tin trên
+        sendCmd("UPLOAD_FILE", JSON.stringify(payload));
+        
+        // Reset input để có thể chọn lại file đó lần sau nếu muốn
+        inputElement.value = "";
+    };
+
+    // Bắt đầu đọc file dưới dạng Data URL (Base64)
+    reader.readAsDataURL(file);
+}
+
+function createNewFolder() {
+    // 1. Kiểm tra xem đang ở đâu
+    if (!currentPath || currentPath === "My Computer" || currentPath === "") {
+        showToast("Vui lòng chọn một ổ đĩa trước khi tạo thư mục!", "error");
+        return;
+    }
+
+    // 2. Hỏi tên thư mục
+    const folderName = prompt("Nhập tên thư mục mới:", "New Folder");
+    
+    // 3. Nếu người dùng bấm OK và có nhập tên
+    if (folderName && folderName.trim() !== "") {
+        // Gửi lệnh lên Server
+        const payload = {
+            path: currentPath,
+            name: folderName.trim()
+        };
+        
+        sendCmd("CREATE_FOLDER", JSON.stringify(payload));
     }
 }

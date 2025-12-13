@@ -145,6 +145,26 @@ namespace RemoteControlServer.Services
                 return "Lỗi Upload: " + ex.Message;
             }
         }
+
+        // [THÊM MỚI] 6. Tạo thư mục mới
+        public static string CreateDirectory(string parentPath, string folderName)
+        {
+            try
+            {
+                if (!Directory.Exists(parentPath)) return "Thư mục cha không tồn tại!";
+                
+                string fullPath = Path.Combine(parentPath, folderName);
+                
+                if (Directory.Exists(fullPath)) return "Thư mục này đã tồn tại!";
+                
+                Directory.CreateDirectory(fullPath);
+                return "OK";
+            }
+            catch (Exception ex)
+            {
+                return "Lỗi tạo folder: " + ex.Message;
+            }
+        }
     }
 }
 
