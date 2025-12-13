@@ -28,11 +28,12 @@ function initiateConnection() {
     };
 
     socket.onmessage = (event) => {
-      if (event.data instanceof ArrayBuffer) {
-        handleBinaryStream(event.data);
-      } else {
-        handleJsonData(event.data);
-      }
+        if (event.data instanceof ArrayBuffer) {
+            // --- XỬ LÝ BINARY MỚI ---
+            handleBinaryStream(event.data);
+        } else {
+            handleJsonData(event.data);
+        }
     };
 
     socket.onclose = () => handleDisconnect();
@@ -154,19 +155,7 @@ function handleJsonData(jsonString) {
         showToast("Đã nhận được video từ Server!", "success");
         break;
         
-      case "WEBCAM_FRAME":
-        // ... (Code hiển thị ảnh webcam cũ giữ nguyên) ...
-        const camImg = document.getElementById("webcam-feed");
-        if(camImg) {
-            camImg.src = "data:image/jpeg;base64," + msg.payload;
-            camImg.style.display = "block";
-            document.getElementById("webcam-placeholder").style.display = "none";
-            document.getElementById("cam-status").className = "badge bg-success";
-            document.getElementById("cam-status").innerText = "LIVE";
-        }
-        break;
-
-        case "FILE_LIST":
+      case "FILE_LIST":
             renderFileManager(msg.payload);
             break;
 
@@ -182,14 +171,26 @@ function handleJsonData(jsonString) {
 }
 
 function handleBinaryStream(arrayBuffer) {
-  if (objectUrl) URL.revokeObjectURL(objectUrl);
-  const blob = new Blob([arrayBuffer], { type: "image/jpeg" });
-  objectUrl = URL.createObjectURL(blob);
-  const img = document.getElementById("live-screen");
-  img.src = objectUrl;
-  img.style.display = "block";
-  document.getElementById("screen-placeholder").style.display = "none";
-  document.getElementById("monitorStatus").innerText = "Live Streaming";
+    // 1. Tạo DataView để đọc byte đầu tiên (Header)
+    const view = new DataView(arrayBuffer);
+    const header = view.getUint8(0); 
+
+    // 2. Cắt bỏ byte đầu tiên, chỉ lấy phần dữ liệu ảnh
+    const blobData = arrayBuffer.slice(1);
+    
+    // 3. Tạo Blob ảnh
+    const blob = new Blob([blobData], { type: "image/jpeg" });
+    const url = URL.createObjectURL(blob);
+
+    // 4. Kiểm tra Header để hiển thị đúng chỗ
+    if (header === 0x01) { 
+        // Header 0x01 = SCREEN
+        renderScreenFrame(url);
+    } 
+    else if (header === 0x02) { 
+        // Header 0x02 = WEBCAM
+        renderWebcamFrame(url);
+    }
 }
 
 // --- 3. GỬI LỆNH (COMMANDS) ---
@@ -843,4 +844,38 @@ function downloadFileFromBase64(fileName, base64) {
     document.body.removeChild(link);
     showToast("Đang tải file xuống...", "success");
 }
+// Hàm phụ trợ hiển thị màn hình (Tách ra cho gọn)
+let screenObjectUrl = null;
+function renderScreenFrame(url) {
+    if (screenObjectUrl) URL.revokeObjectURL(screenObjectUrl); // Xóa URL cũ để giải phóng RAM
+    screenObjectUrl = url;
+    
+    const img = document.getElementById("live-screen");
+    if (img) {
+        img.src = screenObjectUrl;
+        img.style.display = "block";
+        document.getElementById("screen-placeholder").style.display = "none";
+        document.getElementById("monitorStatus").innerText = "Live Streaming";
+    }
+}
 
+// Hàm phụ trợ hiển thị Webcam
+let camObjectUrl = null;
+function renderWebcamFrame(url) {
+    if (camObjectUrl) URL.revokeObjectURL(camObjectUrl);
+    camObjectUrl = url;
+
+    const camImg = document.getElementById("webcam-feed");
+    if (camImg) {
+        camImg.src = camObjectUrl;
+        camImg.style.display = "block";
+        document.getElementById("webcam-placeholder").style.display = "none";
+        
+        // Cập nhật trạng thái UI
+        const statusBadge = document.getElementById("cam-status");
+        if(statusBadge) {
+            statusBadge.className = "badge bg-success";
+            statusBadge.innerText = "LIVE";
+        }
+    }
+}

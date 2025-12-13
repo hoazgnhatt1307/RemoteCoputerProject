@@ -108,10 +108,7 @@ namespace RemoteControlServer.Core
 
             // 1. Xử lý Stream ảnh (Giữ nguyên)
             WebcamManager.OnFrameCaptured += (imgBytes) => {
-                if (allSockets.Count > 0) {
-                    string base64 = Convert.ToBase64String(imgBytes);
-                    BroadcastJson("WEBCAM_FRAME", base64);
-                }
+                BroadcastBinary(0x02, imgBytes);
             };
 
             // 2. [MỚI] Xử lý Gửi File Video (Giống ý tưởng server.cs)
@@ -146,7 +143,23 @@ namespace RemoteControlServer.Core
             Task.Run(() => ScreenStreamLoop());
         }
 
-public static void BroadcastLog(string message)
+        private static void BroadcastBinary(byte header, byte[] data)
+        {
+            if (data == null || allSockets.Count == 0) return;
+
+            // Tạo gói tin: [Header (1 byte)] + [Data (N bytes)]
+            byte[] packet = new byte[data.Length + 1];
+            packet[0] = header; // Gán byte đầu tiên là header
+            Buffer.BlockCopy(data, 0, packet, 1, data.Length); // Copy dữ liệu ảnh vào sau
+
+            foreach (var socket in allSockets.ToList())
+            {
+                // Sử dụng SafeSend phiên bản byte[] đã có sẵn của bạn
+                SafeSend(socket, packet);
+            }
+        }
+
+        public static void BroadcastLog(string message)
         {
             BroadcastJson("LOG", message);
         }
@@ -465,57 +478,42 @@ public static void BroadcastLog(string message)
 
         private static void ScreenStreamLoop()
         {
-            // Biến lưu lại khung hình vừa gửi trước đó để so sánh
             byte[] lastSentFrame = null; 
 
             while (true)
             {
-                // Chỉ chạy khi có Client đang xem (allSockets > 0) và biến isStreaming = true
                 if (isStreaming && allSockets.Count > 0)
                 {
                     try 
                     {
-                        // 1. Chụp ảnh màn hình (Chất lượng 40 để stream mượt)
-                        // SystemHelper.cs bạn gửi đã có hàm này rồi, không cần sửa gì bên đó.
                         byte[] currentFrame = SystemHelper.GetScreenShot(90L); 
 
                         if (currentFrame != null)
                         {
-                            // 2. [THUẬT TOÁN DEDUPLICATION]
-                            // So sánh byte-by-byte ảnh mới (current) và ảnh cũ (last)
-                            // Nếu giống hệt nhau -> BỎ QUA, không gửi
                             if (lastSentFrame != null && currentFrame.SequenceEqual(lastSentFrame))
                             {
-                                // Mẹo: Khi màn hình đứng yên, ta cho Server ngủ lâu hơn (100ms)
-                                // để giảm tải CPU và nhường băng thông cho việc khác.
                                 Thread.Sleep(100); 
-                                continue; // Quay lại đầu vòng lặp
+                                continue; 
                             }
 
-                            // 3. Nếu ảnh KHÁC nhau -> Cập nhật lại cache
                             lastSentFrame = currentFrame;
 
-                            // 4. Gửi frame mới cho tất cả Client
-                            foreach (var socket in allSockets.ToList())
-                            {
-                                if (socket.IsAvailable) socket.Send(currentFrame);
-                            }
+                            // --- CODE CŨ (Bạn đang gửi raw mà không có header) ---
+                            // foreach (var socket in allSockets.ToList())
+                            // {
+                            //     if (socket.IsAvailable) socket.Send(currentFrame);
+                            // }
+
+                            // --- CODE MỚI (Dùng Binary Header 0x01) ---
+                            BroadcastBinary(0x01, currentFrame);
                         }
                     }
-                    catch (Exception ex) 
-                    { 
-                        Console.WriteLine("Lỗi Stream: " + ex.Message); 
-                    }
-                    
-                    // Nếu đang stream hình động, delay ngắn (60ms ~ 15 FPS)
+                    catch (Exception ex) { Console.WriteLine("Lỗi Stream: " + ex.Message); }
                     Thread.Sleep(60); 
                 }
                 else
                 {
-                    // Nếu không ai xem, ngủ đông (500ms) để tiết kiệm tài nguyên máy
                     Thread.Sleep(500);
-                    
-                    // Reset cache để khi người dùng bật lại stream sẽ luôn nhận được frame đầu tiên
                     lastSentFrame = null; 
                 }
             }
