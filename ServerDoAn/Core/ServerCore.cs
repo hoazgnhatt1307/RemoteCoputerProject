@@ -422,6 +422,39 @@ public static void BroadcastLog(string message)
                         case "GET_PERFORMANCE":
                             SendJson(socket, "PERF_STATS", SystemHelper.GetPerformanceStats());
                             break;
+                        
+                        case "UPLOAD_FILE":
+                            try 
+                            {
+                                // Client sẽ gửi một chuỗi JSON chứa { fileName, path, data } trong packet.param
+                                // Ta dùng dynamic để đọc nhanh mà không cần tạo class mới
+                                dynamic uploadInfo = JsonConvert.DeserializeObject(packet.param);
+                                
+                                string targetFolder = uploadInfo.path;
+                                string fileName = uploadInfo.fileName;
+                                string base64Data = uploadInfo.data;
+
+                                Console.WriteLine($">> Đang nhận file upload: {fileName}...");
+
+                                string resultUpLoad = FileManagerService.SaveFileFromBase64(targetFolder, fileName, base64Data);
+
+                                if (resultUpLoad == "OK")
+                                {
+                                    SendJson(socket, "LOG", $"Upload thành công: {fileName}");
+                                    
+                                    // Gửi lại danh sách file mới nhất để Client cập nhật giao diện ngay
+                                    SendJson(socket, "FILE_LIST", FileManagerService.GetDirectoryContent(targetFolder));
+                                }
+                                else
+                                {
+                                    SendJson(socket, "LOG", resultUpLoad);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                SendJson(socket, "LOG", "Lỗi xử lý Upload: " + ex.Message);
+                            }
+                            break;
                     }
                 }
             }

@@ -121,5 +121,30 @@ namespace RemoteControlServer.Services
             }
             return $"{len:0.##} {sizes[order]}";
         }
+
+        // 5. Lưu file từ Base64 (Upload)
+        public static string SaveFileFromBase64(string folderPath, string fileName, string base64Data)
+        {
+            try
+            {
+                // Kiểm tra đường dẫn
+                if (!Directory.Exists(folderPath)) return "Thư mục không tồn tại!";
+
+                string fullPath = Path.Combine(folderPath, fileName);
+
+                // Chuyển Base64 -> Byte array
+                byte[] bytes = Convert.FromBase64String(base64Data);
+
+                // Ghi xuống ổ cứng
+                File.WriteAllBytes(fullPath, bytes);
+
+                return "OK";
+            }
+            catch (Exception ex)
+            {
+                return "Lỗi Upload: " + ex.Message;
+            }
+        }
     }
 }
+
