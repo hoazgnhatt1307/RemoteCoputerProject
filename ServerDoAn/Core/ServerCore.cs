@@ -17,8 +17,7 @@ namespace RemoteControlServer.Core
     {
         private static List<IWebSocketConnection> allSockets = new List<IWebSocketConnection>();
         private static bool isStreaming = false;
-        private const string SERVER_PASSWORD = "123";
-
+        private static string _sessionPassword = "";
         private static readonly object _socketLock = new object();
         private static byte[] _lastFrame = null;
 
@@ -77,6 +76,16 @@ namespace RemoteControlServer.Core
         public static void Start(string url)
         {
             SystemHelper.InitCounters();
+            _sessionPassword = new Random().Next(100000, 999999).ToString();
+
+            // In ra Console thật nổi bật
+            Console.ForegroundColor = ConsoleColor.Cyan;
+            Console.WriteLine("=================================================");
+            Console.WriteLine($"   REMOTE CONTROL SERVER IS RUNNING");
+            Console.WriteLine($"   URL: {url}");
+            Console.WriteLine($"   >> YOUR OTP PASSWORD: {_sessionPassword} <<");
+            Console.WriteLine("=================================================");
+            Console.ResetColor();
 
             var server = new WebSocketServer(url);
             server.Start(socket =>
@@ -183,14 +192,22 @@ public static void BroadcastLog(string message)
                 // 1. Auth
                 if (packet.type == "AUTH")
                 {
-                    if (packet.payload == SERVER_PASSWORD)
-                    {
-                        SendJson(socket, "AUTH_RESULT", "OK");
-                        Console.WriteLine("-> Login OK");
-                    }
-                    else SendJson(socket, "AUTH_RESULT", "FAIL");
-                    return;
+                // --- SỬA DÒNG NÀY ---
+                // Cũ: if (packet.payload == SERVER_PASSWORD)
+                
+                // Mới: So sánh với mật khẩu động
+                if (packet.payload == _sessionPassword)
+                {
+                    SendJson(socket, "AUTH_RESULT", "OK");
+                    Console.WriteLine("-> Client đăng nhập thành công!");
                 }
+                else 
+                {
+                    SendJson(socket, "AUTH_RESULT", "FAIL");
+                    Console.WriteLine("-> Client sai mật khẩu!");
+                }
+                return;
+            }
 
                 // 2. Command Processing
                 if (!string.IsNullOrEmpty(packet.command))
@@ -224,7 +241,7 @@ public static void BroadcastLog(string message)
                                     SendJson(socket, "SCREENSHOT_FILE", base64Full);
 
                                     // 4. (Tùy chọn) Tạo thêm ảnh nhỏ (Thumbnail) để hiển thị xem trước trên Web cho nhanh
-                                    var previewBytes = SystemHelper.GetScreenShot(50L, 0.3); 
+                                    var previewBytes = SystemHelper.GetScreenShot(85L, 0.8); 
                                     if (previewBytes != null)
                                     {
                                         SendJson(socket, "SCREEN_CAPTURE", Convert.ToBase64String(previewBytes));
@@ -415,21 +432,58 @@ public static void BroadcastLog(string message)
 
         private static void ScreenStreamLoop()
         {
+            // Biến lưu lại khung hình vừa gửi trước đó để so sánh
+            byte[] lastSentFrame = null; 
+
             while (true)
             {
+                // Chỉ chạy khi có Client đang xem (allSockets > 0) và biến isStreaming = true
                 if (isStreaming && allSockets.Count > 0)
                 {
-                    byte[] frame = SystemHelper.GetScreenShot(40L); // Chất lượng thấp để mượt
-                    if (frame != null)
+                    try 
                     {
-                        foreach (var socket in allSockets.ToList())
-                            if (socket.IsAvailable) socket.Send(frame);
+                        // 1. Chụp ảnh màn hình (Chất lượng 40 để stream mượt)
+                        // SystemHelper.cs bạn gửi đã có hàm này rồi, không cần sửa gì bên đó.
+                        byte[] currentFrame = SystemHelper.GetScreenShot(90L); 
+
+                        if (currentFrame != null)
+                        {
+                            // 2. [THUẬT TOÁN DEDUPLICATION]
+                            // So sánh byte-by-byte ảnh mới (current) và ảnh cũ (last)
+                            // Nếu giống hệt nhau -> BỎ QUA, không gửi
+                            if (lastSentFrame != null && currentFrame.SequenceEqual(lastSentFrame))
+                            {
+                                // Mẹo: Khi màn hình đứng yên, ta cho Server ngủ lâu hơn (100ms)
+                                // để giảm tải CPU và nhường băng thông cho việc khác.
+                                Thread.Sleep(100); 
+                                continue; // Quay lại đầu vòng lặp
+                            }
+
+                            // 3. Nếu ảnh KHÁC nhau -> Cập nhật lại cache
+                            lastSentFrame = currentFrame;
+
+                            // 4. Gửi frame mới cho tất cả Client
+                            foreach (var socket in allSockets.ToList())
+                            {
+                                if (socket.IsAvailable) socket.Send(currentFrame);
+                            }
+                        }
                     }
-                    Thread.Sleep(60); // ~15 FPS
+                    catch (Exception ex) 
+                    { 
+                        Console.WriteLine("Lỗi Stream: " + ex.Message); 
+                    }
+                    
+                    // Nếu đang stream hình động, delay ngắn (60ms ~ 15 FPS)
+                    Thread.Sleep(60); 
                 }
                 else
                 {
+                    // Nếu không ai xem, ngủ đông (500ms) để tiết kiệm tài nguyên máy
                     Thread.Sleep(500);
+                    
+                    // Reset cache để khi người dùng bật lại stream sẽ luôn nhận được frame đầu tiên
+                    lastSentFrame = null; 
                 }
             }
         }
