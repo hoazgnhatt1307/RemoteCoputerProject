@@ -1,0 +1,97 @@
+/* --- SYSTEM LOG --- */
+.terminal-window {
+    background-color: var(--bg-terminal);
+    color: #4ade80;
+    font-family: "Consolas", monospace;
+    height: 400px;
+    padding: 16px;
+    border-radius: var(--radius-md);
+    overflow-y: auto;
+    border: 1px solid #374151;
+    font-size: 0.9rem;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+/* --- RAW KEY AREA --- */
+.raw-log-area {
+    background: var(--bg-input);
+    color: var(--text-primary);
+    padding: 10px;
+    font-family: 'Consolas', monospace;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    gap: 5px;
+    width: 100%;
+    max-width: 100%;
+    min-height: 300px;
+    max-height: 450px;
+    height: 400px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border-color);
+}
+
+.key-badge {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    white-space: nowrap;
+    display: inline-block;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.key-badge.special { background: var(--danger-color); border-color: var(--danger-color); color: white; }
+.key-badge.mod { background: var(--warning-color); border-color: var(--warning-color); color: white; }
+
+@keyframes popIn { from { transform: scale(0.5); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+/* --- A4 PAPER EDITOR --- */
+.paper-container {
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    padding: 15px;
+    padding-top: 17.7px;
+    background-image: linear-gradient(var(--border-color) 1px, transparent 1px);
+    background-size: 100% 1.8rem;
+    background-position: 0 17.7px;
+    line-height: 1.8rem;
+    width: 100%;
+    max-width: 100%;
+    min-height: 300px;
+    max-height: 450px;
+    height: 400px;
+    overflow: hidden;
+}
+.paper-textarea {
+    width: 100%; 
+    height: 100%;
+    border: none; 
+    resize: none; 
+    outline: none;
+    background: transparent;
+    font-family: 'Courier New', monospace;
+    font-size: 1.1rem;
+    line-height: 1.8rem;
+    color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .raw-log-area,
+    .paper-container {
+        min-height: 250px;
+        height: 300px;
+        max-height: 350px;
+    }
+    
+    .paper-textarea {
+        font-size: 1rem;
+    }
+}

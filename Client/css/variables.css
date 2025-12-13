@@ -1,0 +1,180 @@
+/* ============================================
+   VARIABLES.CSS - DARK MODE READY
+   Version: 2.0 (Fixed với đầy đủ biến)
+   ============================================ */
+
+:root {
+    /* --- BRAND COLORS (Màu thương hiệu) --- */
+    --primary-color: #2563eb;       /* Blue 600 - Xanh dương hiện đại */
+    --primary-hover: #1d4ed8;       /* Blue 700 - Hover state */
+    --primary-dark: #1e40af;        /* Blue 800 - Đậm hơn (tương thích cũ) */
+    --primary-light: #dbeafe;       /* Blue 100 - Badge/Secondary button */
+    
+    --secondary-color: #6c757d;     /* Gray - Giữ nguyên Bootstrap */
+    --success-color: #10b981;       /* Emerald 500 */
+    --success-hover: #059669;       /* Emerald 600 */
+    --danger-color: #ef4444;        /* Red 500 */
+    --danger-hover: #dc2626;        /* Red 600 */
+    --warning-color: #f59e0b;       /* Amber 500 */
+    --warning-hover: #d97706;       /* Amber 600 */
+    --info-color: #3b82f6;          /* Blue 500 */
+    --info-hover: #2563eb;          /* Blue 600 */
+    
+    /* --- LIGHT MODE (Mặc định) --- */
+    --bg-body: #f8fafc;             /* Slate 50 - Nền tổng thể */
+    --bg-sidebar: #ffffff;          /* Sidebar trắng */
+    --bg-panel: #ffffff;            /* Tương thích với code cũ (alias cho sidebar) */
+    --bg-card: #ffffff;             /* Card nền trắng */
+    --bg-input: #f1f5f9;            /* Slate 100 - Input field */
+    --bg-terminal: #111827;         /* Gray 900 - Terminal luôn tối */
+    
+    /* Borders */
+    --border-color: #e2e8f0;        /* Slate 200 */
+    --border-hover: #cbd5e1;        /* Slate 300 */
+    
+    /* Text */
+    --text-primary: #0f172a;        /* Slate 900 - Chữ chính */
+    --text-secondary: #64748b;      /* Slate 500 - Chữ phụ */
+    --text-light: #94a3b8;          /* Slate 400 - Tương thích cũ */
+    --text-muted: #94a3b8;          /* Slate 400 - Chữ mờ nhạt */
+    
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+
+    /* Layout (Giữ nguyên) */
+    --sidebar-width: 16rem;
+    --header-height: 60px;
+    --radius-md: 0.5rem;
+    --radius-lg: 0.75rem;
+    --transition-fast: 0.2s ease;
+}
+
+/* ============================================
+   DARK MODE CONFIGURATION
+   Kích hoạt bằng attribute: data-theme="dark"
+   ============================================ */
+[data-theme="dark"] {
+    /* Nền tối - Slate Scale */
+    --bg-body: #0f172a;             /* Slate 900 - Nền tổng thể */
+    --bg-sidebar: #1e293b;          /* Slate 800 - Sidebar nổi bật hơn */
+    --bg-panel: #1e293b;            /* Alias cho sidebar */
+    --bg-card: #1e293b;             /* Card cùng tone */
+    --bg-input: #334155;            /* Slate 700 - Input sáng hơn card */
+    --bg-terminal: #0a0e1a;         /* Terminal đen hơn nữa cho Dark Mode */
+    
+    /* Borders tối */
+    --border-color: #334155;        /* Slate 700 */
+    --border-hover: #475569;        /* Slate 600 */
+    
+    /* Text sáng */
+    --text-primary: #f8fafc;        /* Slate 50 - Chữ chính */
+    --text-secondary: #cbd5e1;      /* Slate 300 - Chữ phụ */
+    --text-light: #94a3b8;          /* Slate 400 */
+    --text-muted: #94a3b8;          /* Slate 400 - Đủ tương phản */
+    
+    /* Shadows đậm hơn */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 10px 15px -3px rgba(0, 0, 0, 0.4);
+    
+    /* Brand colors giữ nguyên (không cần override) */
+}
+
+/* ============================================
+   GLOBAL STYLES (Áp dụng biến)
+   ============================================ */
+
+body {
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Cards */
+.card-custom {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-card);
+    color: var(--text-primary);
+    transition: all var(--transition-fast);
+}
+
+/* Sidebar */
+#sidebar {
+    background-color: var(--bg-sidebar);
+    border-right: 1px solid var(--border-color);
+}
+
+/* Form Controls */
+.form-control {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+    transition: all var(--transition-fast);
+}
+
+.form-control:focus {
+    background-color: var(--bg-input);
+    color: var(--text-primary);
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.25rem rgba(37, 99, 235, 0.25);
+}
+
+/* Bootstrap Input Group Text */
+.input-group-text {
+    background-color: var(--bg-input);
+    color: var(--text-secondary);
+    border-color: var(--border-color);
+}
+
+/* Tables (Dark Mode Fix) */
+[data-theme="dark"] .table {
+    --bs-table-bg: var(--bg-card);
+    --bs-table-color: var(--text-primary);
+    --bs-table-border-color: var(--border-color);
+}
+
+[data-theme="dark"] .table-hover > tbody > tr:hover {
+    background-color: var(--bg-input);
+}
+
+/* Modals */
+[data-theme="dark"] .modal-content-custom,
+[data-theme="dark"] .login-card {
+    background-color: var(--bg-card);
+    color: var(--text-primary);
+    border-color: var(--border-color);
+}
+
+/* Select & Buttons remain unchanged (Bootstrap handles these) */
+
+/* ============================================
+   GLOBAL SCROLLBAR STYLES
+   ============================================ */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-body);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: var(--text-secondary);
+}
+
+/* Firefox */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-color) var(--bg-body);
+}

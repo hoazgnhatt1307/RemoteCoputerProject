@@ -4,6 +4,8 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Linq;
 using System.Windows.Forms;
+using System.Diagnostics;
+using System.Runtime.InteropServices;
 
 namespace RemoteControlServer.Helpers
 {
@@ -62,5 +64,58 @@ namespace RemoteControlServer.Helpers
         {
             return ImageCodecInfo.GetImageEncoders().FirstOrDefault(codec => codec.FormatID == format.Guid);
         }
+
+        private static PerformanceCounter cpuCounter;
+        private static PerformanceCounter ramCounter;
+
+        public static void InitCounters()
+        {
+            try
+            {
+                // Khởi tạo bộ đếm hiệu năng (chỉ chạy trên Windows)
+                cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+                cpuCounter.NextValue(); // Gọi lần đầu thường trả về 0, cần gọi mồi
+            }
+            catch { }
+        }
+
+        public static object GetSystemInfo()
+        {
+            // Lấy tổng dung lượng RAM (Cách đơn giản cho .NET Core/5+)
+            long totalRam = 0;
+            try {
+                 totalRam = GC.GetGCMemoryInfo().TotalAvailableMemoryBytes / 1024 / 1024; // MB
+            } catch {}
+
+            return new
+            {
+                machineName = Environment.MachineName,
+                userName = Environment.UserName,
+                osVal = RuntimeInformation.OSDescription + " " + RuntimeInformation.OSArchitecture,
+                totalRam = totalRam + " MB",
+                cpuName = "Standard Processor" // Lấy tên CPU chính xác cần WMI, tạm thời để placeholder
+            };
+        }
+
+        public static object GetPerformanceStats()
+        {
+            float cpu = 0;
+            float ramAvail = 0;
+            try
+            {
+                if (cpuCounter == null) InitCounters();
+                cpu = cpuCounter.NextValue();
+                ramAvail = ramCounter.NextValue();
+            }
+            catch { }
+
+            return new
+            {
+                cpu = Math.Round(cpu, 1),
+                ramFree = ramAvail
+            };
+        }
     }
 }
+

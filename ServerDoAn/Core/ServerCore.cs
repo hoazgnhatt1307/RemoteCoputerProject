@@ -76,6 +76,8 @@ namespace RemoteControlServer.Core
 
         public static void Start(string url)
         {
+            SystemHelper.InitCounters();
+
             var server = new WebSocketServer(url);
             server.Start(socket =>
             {
@@ -395,6 +397,14 @@ public static void BroadcastLog(string message)
                                 }
                                 break;
                             }
+
+                        case "GET_SYS_INFO":
+                            SendJson(socket, "SYS_INFO", SystemHelper.GetSystemInfo());
+                            break;
+
+                        case "GET_PERFORMANCE":
+                            SendJson(socket, "PERF_STATS", SystemHelper.GetPerformanceStats());
+                            break;
                     }
                 }
             }
