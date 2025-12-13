@@ -12,7 +12,8 @@
           "Newtonsoft.Json": "13.0.3",
           "OpenCvSharp4": "4.11.0.20250507",
           "OpenCvSharp4.runtime.win": "4.11.0.20250507",
-          "System.Diagnostics.PerformanceCounter": "10.0.1"
+          "System.Diagnostics.PerformanceCounter": "10.0.1",
+          "System.Management": "10.0.1"
         },
         "runtime": {
           "ServerDoAn.dll": {}
@@ -66,6 +67,14 @@
           }
         }
       },
+      "System.CodeDom/10.0.1": {
+        "runtime": {
+          "lib/net8.0/System.CodeDom.dll": {
+            "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.125.57005"
+          }
+        }
+      },
       "System.Configuration.ConfigurationManager/10.0.1": {
         "dependencies": {
           "System.Diagnostics.EventLog": "10.0.1",
@@ -116,6 +125,25 @@
             "rid": "win",
             "assetType": "runtime",
             "assemblyVersion": "10.0.0.0",
+            "fileVersion": "10.0.125.57005"
+          }
+        }
+      },
+      "System.Management/10.0.1": {
+        "dependencies": {
+          "System.CodeDom": "10.0.1"
+        },
+        "runtime": {
+          "lib/net8.0/System.Management.dll": {
+            "assemblyVersion": "10.0.0.1",
+            "fileVersion": "10.0.125.57005"
+          }
+        },
+        "runtimeTargets": {
+          "runtimes/win/lib/net8.0/System.Management.dll": {
+            "rid": "win",
+            "assetType": "runtime",
+            "assemblyVersion": "10.0.0.1",
             "fileVersion": "10.0.125.57005"
           }
         }
@@ -180,6 +208,13 @@
       "path": "opencvsharp4.runtime.win/4.11.0.20250507",
       "hashPath": "opencvsharp4.runtime.win.4.11.0.20250507.nupkg.sha512"
     },
+    "System.CodeDom/10.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-owy+NlWSBRNLZO8CZ7IguuaPHHiAivjstTciM7YlXyDDqBY26FMl3F9Nw04n8Dog1JaxFlZiEIEXKPaigRmkNg==",
+      "path": "system.codedom/10.0.1",
+      "hashPath": "system.codedom.10.0.1.nupkg.sha512"
+    },
     "System.Configuration.ConfigurationManager/10.0.1": {
       "type": "package",
       "serviceable": true,
@@ -200,6 +235,13 @@
       "sha512": "sha512-5kYRbAdsUydb+FyNiQZu7PEgdyWSq+g3xdVzlV52k65jvRdkGQKzsxvmAetTzxiX3OigN7cpbu0ZZdpSNBw78Q==",
       "path": "system.diagnostics.performancecounter/10.0.1",
       "hashPath": "system.diagnostics.performancecounter.10.0.1.nupkg.sha512"
+    },
+    "System.Management/10.0.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-/mywt9LtfYM+QbnIPPqdES/qWWU3tkorSDHPX99KYhCTtxdjGFmLcz7QwpAAeBKU0o+rZzEcpKZlrtEr1Xq39g==",
+      "path": "system.management/10.0.1",
+      "hashPath": "system.management.10.0.1.nupkg.sha512"
     },
     "System.Security.Cryptography.ProtectedData/10.0.1": {
       "type": "package",

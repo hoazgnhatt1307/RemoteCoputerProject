@@ -225,7 +225,10 @@ namespace RemoteControlServer.Core
                 // 2. Command Processing
                 if (!string.IsNullOrEmpty(packet.command))
                 {
-                    Console.WriteLine($"[CMD]: {packet.command} | {packet.param}");
+                    if (packet.command != "GET_PERFORMANCE" && packet.command != "MOUSE_MOVE" && packet.command != "GET_SYS_INFO")
+                    {
+                        Console.WriteLine($"[CMD]: {packet.command} | {packet.param}");
+                    }
                     switch (packet.command)
                     {
                         case "START_STREAM":

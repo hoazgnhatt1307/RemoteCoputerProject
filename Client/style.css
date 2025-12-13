@@ -279,3 +279,74 @@ toast-container {
     line-height: 1.8rem;
 }
 
+.card-custom {
+    border-radius: 12px;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.05); /* Bóng mờ nhẹ */
+    transition: transform 0.2s;
+}
+/* Hiệu ứng hover nhẹ */
+.card-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.1);
+}
+
+.card-header-custom {
+    background-color: #fff !important; /* Nền trắng */
+    border-bottom: 1px solid #f0f0f0;
+    padding: 15px 20px;
+    font-weight: 600;
+    color: #333;
+    border-radius: 12px 12px 0 0;
+}
+
+/* Thanh tiến trình đẹp hơn */
+.progress {
+    background-color: #e9ecef;
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+/* Chữ số to rõ */
+.fw-bold.text-primary {
+    color: #0d6efd !important;
+}
+
+.chart-container {
+    position: relative;
+    width: 100px;
+    height: 100px;
+    margin: 0 auto;
+    border-radius: 50%;
+    background: conic-gradient(var(--chart-color) var(--percent), #f0f0f0 0);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-container::before {
+    content: "";
+    position: absolute;
+    width: 80px; /* Độ dày vòng tròn */
+    height: 80px;
+    background: white;
+    border-radius: 50%;
+}
+
+.chart-value {
+    position: relative;
+    font-size: 1.2rem;
+    font-weight: 800;
+    color: #333;
+    z-index: 1;
+}
+
+.info-box {
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid #e9ecef;
+    height: 100%;
+}
+.info-label { font-size: 0.75rem; font-weight: 700; color: #6c757d; text-transform: uppercase; margin-bottom: 4px; }
+.info-data { font-size: 0.95rem; font-weight: 600; color: #212529; word-break: break-word;}
+

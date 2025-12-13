@@ -131,105 +131,143 @@
         </div>
 
         <div id="tab-dashboard" class="tab-content active">
-          <div class="row">
+          
+          <div class="row mb-4">
             <div class="col-md-6">
-              <div class="card-custom">
+              <div class="card-custom h-100">
                 <div class="card-header-custom">
                   <i class="fas fa-power-off text-danger"></i> Power Control
                 </div>
-                <div class="d-grid gap-2">
-                  <button
-                    onclick="if(confirm('Tắt máy server?')) sendCommand('SHUTDOWN')"
-                    class="btn btn-danger"
-                  >
+                <div class="d-grid gap-2 p-3">
+                  <button onclick="if(confirm('Tắt máy server?')) sendCommand('SHUTDOWN')" class="btn btn-danger">
                     <i class="fas fa-power-off"></i> SHUTDOWN SERVER
                   </button>
-                  <button
-                    onclick="if(confirm('Khởi động lại server?')) sendCommand('RESTART')"
-                    class="btn btn-warning text-dark"
-                  >
+                  <button onclick="if(confirm('Khởi động lại server?')) sendCommand('RESTART')" class="btn btn-warning text-dark">
                     <i class="fas fa-sync"></i> RESTART SERVER
                   </button>
                 </div>
               </div>
             </div>
+            
             <div class="col-md-6">
-              <div class="card-custom">
+              <div class="card-custom h-100">
                 <div class="card-header-custom">
                   <i class="fas fa-rocket text-primary"></i> Quick Launch
                 </div>
-                <div class="input-group mb-3">
-                  <input
-                    type="text"
-                    id="quickAppInput"
-                    class="form-control"
-                    placeholder="Tên app (vd: notepad, calc, mspaint)"
-                    onkeydown="if(event.key === 'Enter') startApp()"
-                  />
-                  <button onclick="startApp()" class="btn btn-primary">
-                    <i class="fas fa-play"></i> Run
-                  </button>
-                  <button
-                    onclick="browseApps()"
-                    class="btn btn-warning text-dark fw-bold"
-                  >
-                    <i class="fas fa-th-large"></i> Library
-                  </button>
-                </div>
-                <label class="small fw-bold text-secondary mb-2"
-                  >Web Browser Shortcuts:</label
-                >
-                <div class="d-flex gap-2 justify-content-between">
-                  <button
-                    onclick="openWeb('https://facebook.com')"
-                    class="btn btn-outline-primary flex-fill"
-                  >
-                    <i class="fab fa-facebook-f"></i> FB
-                  </button>
-                  <button
-                    onclick="openWeb('https://youtube.com')"
-                    class="btn btn-outline-danger flex-fill"
-                  >
-                    <i class="fab fa-youtube"></i> YT
-                  </button>
-                  <button
-                    onclick="openWeb('https://gmail.com')"
-                    class="btn btn-outline-danger flex-fill"
-                  >
-                    <i class="fas fa-envelope"></i> Mail
-                  </button>
-                  <button
-                    onclick="openWeb('https://google.com')"
-                    class="btn btn-outline-success flex-fill"
-                  >
-                    <i class="fab fa-google"></i> Web
-                  </button>
+                <div class="p-3">
+                    <div class="input-group mb-3">
+                      <input type="text" id="quickAppInput" class="form-control" placeholder="Tên app (vd: notepad, chrome)" onkeydown="if(event.key === 'Enter') startApp()" />
+                      <button onclick="startApp()" class="btn btn-primary"><i class="fas fa-play"></i> Run</button>
+                      <button onclick="browseApps()" class="btn btn-warning text-dark fw-bold"><i class="fas fa-th-large"></i></button>
+                    </div>
+                    <label class="small fw-bold text-secondary mb-2">Web Browser Shortcuts:</label>
+                    <div class="d-flex gap-2 justify-content-between">
+                      <button onclick="openWeb('https://facebook.com')" class="btn btn-outline-primary flex-fill"><i class="fab fa-facebook-f"></i> FB</button>
+                      <button onclick="openWeb('https://youtube.com')" class="btn btn-outline-danger flex-fill"><i class="fab fa-youtube"></i> YT</button>
+                      <button onclick="openWeb('https://gmail.com')" class="btn btn-outline-danger flex-fill"><i class="fas fa-envelope"></i> Mail</button>
+                      <button onclick="openWeb('https://google.com')" class="btn btn-outline-success flex-fill"><i class="fab fa-google"></i> Web</button>
+                    </div>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="row">
+            <div class="col-12">
+              <div class="card-custom bg-white border-0 shadow-sm">
+                <div class="card-header-custom bg-white text-dark border-bottom">
+                  <i class="fas fa-server text-success"></i> <span class="fw-bold">Server Health & Info</span>
+                </div>
+                <div class="card-body">
+                  <div class="row align-items-center">
+                    
+                    <div class="col-lg-7 border-end">
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label"><i class="fab fa-windows"></i> Hệ điều hành</div>
+                                    <div class="info-data text-primary" id="os-info">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label"><i class="fas fa-desktop"></i> Tên máy (Hostname)</div>
+                                    <div class="info-data" id="pc-name">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label"><i class="fas fa-microchip"></i> CPU Model</div>
+                                    <div class="info-data" id="cpu-name">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label"><i class="fas fa-memory"></i> Card Đồ Họa (GPU)</div>
+                                    <div class="info-data text-success" id="gpu-name">Loading...</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label"><i class="fas fa-hdd"></i> Ổ cứng chính</div>
+                                    <div class="info-data" id="disk-name">---</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="info-box">
+                                    <div class="info-label"><i class="fas fa-film"></i> VRAM</div>
+                                    <div class="info-data" id="vram-val">---</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5">
+                        <div class="row text-center mt-3 mt-lg-0">
+                            <div class="col-6">
+                                <div class="mb-2 small fw-bold text-secondary">CPU LOAD</div>
+                                <div class="chart-container" id="chart-cpu" style="--chart-color: #0d6efd; --percent: 0%;">
+                                    <div class="chart-value" id="val-cpu">0%</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div class="mb-2 small fw-bold text-secondary">DISK (C:)</div>
+                                <div class="chart-container" id="chart-disk" style="--chart-color: #dc3545; --percent: 0%;">
+                                    <div class="chart-value" id="val-disk">0%</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-center mt-4">
+                            <small class="text-muted fst-italic"><i class="fas fa-sync fa-spin"></i> Cập nhật thời gian thực...</small>
+                        </div>
+                    </div>
+
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
 
         <div id="tab-monitor" class="tab-content">
           <div class="row">
             <div class="col-lg-8">
               <div class="card-custom h-100">
-                <div class="card-header-custom">
-                  <span><i class="fas fa-video text-danger"></i> Live Stream</span>
+                <div class="card-header-custom d-flex justify-content-between align-items-center">
+                  <span>
+                    <i class="fas fa-video text-danger"></i> Live Stream 
+                      <span id="stream-fps-badge" class="badge bg-dark ms-2 border border-secondary shadow-sm" style="min-width: 60px;">0 FPS</span>
+                  </span>
                   
                   <div class="d-flex align-items-center gap-2"> 
-                    
                     <div class="form-check form-switch me-3">
                         <input class="form-check-input" type="checkbox" id="control-toggle" onchange="toggleControl(this)">
-                        <label class="form-check-label fw-bold small" for="control-toggle">Remote Control</label>
+                        <label class="form-check-label fw-bold small" for="control-toggle">Control</label>
                     </div>
-
-                    <button onclick="sendCommand('START_STREAM')" class="btn btn-success btn-sm">
-                      <i class="fas fa-play"></i> Start
-                    </button>
-                    <button onclick="sendCommand('STOP_STREAM')" class="btn btn-secondary btn-sm">
-                      <i class="fas fa-stop"></i> Stop
-                    </button>
+                    <button onclick="openGalleryFolder()" class="btn btn-warning btn-sm text-dark fw-bold me-1"><i class="fas fa-images"></i></button>
+                    <button onclick="sendCommand('START_STREAM')" class="btn btn-success btn-sm"><i class="fas fa-play"></i></button>
+                    <button onclick="sendCommand('STOP_STREAM')" class="btn btn-secondary btn-sm"><i class="fas fa-stop"></i></button>
                   </div>
                 </div>
 

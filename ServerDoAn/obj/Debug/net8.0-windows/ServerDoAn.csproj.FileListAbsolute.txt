@@ -64,3 +64,6 @@ C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\bin\Debug\net8.0-windows\r
 C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\obj\Debug\net8.0-windows\ServerDoAn.csproj.Up2Date
 C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\obj\Debug\net8.0-windows\ServerDoAn.genruntimeconfig.cache
 C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\obj\Debug\net8.0-windows\ref\ServerDoAn.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\bin\Debug\net8.0-windows\System.CodeDom.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\bin\Debug\net8.0-windows\System.Management.dll
+C:\Hoàng Nhật\Cơ sở ngành\MMT\do an\ServerDoAn\bin\Debug\net8.0-windows\runtimes\win\lib\net8.0\System.Management.dll
